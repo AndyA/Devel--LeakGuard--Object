@@ -2,30 +2,17 @@ package Devel::LeakTrack::Object;
 
 use 5.008;
 
-# We abuse refs a LOT
 use strict;
 use warnings;
 
-use Carp         ();
-use Scalar::Util ();
+use Carp;
+use Scalar::Util qw( blessed refaddr );
 
 use base qw( Exporter );
 our @EXPORT_OK = qw( track bless status );
 
-use vars qw( $VERSION @EXPORT_OK );
-use vars qw(
- %OBJECT_COUNT %TRACKED %DESTROY_ORIGINAL %DESTROY_STUBBED
- %DESTROY_NEXT
-);
-
-BEGIN {
-
-  # Set up state storage (primary for clarity)
-  %OBJECT_COUNT     = ();
-  %TRACKED          = ();
-  %DESTROY_ORIGINAL = ();
-  %DESTROY_STUBBED  = ();
-}
+our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
+  %TRACKED );
 
 =head1 NAME
 
@@ -77,35 +64,65 @@ will not be impacted.
 sub import {
   my $class  = shift;
   my @import = ();
+  adj_magic( 0 );
   while ( @_ ) {
     my $function = shift;
-    unless ( $function =~ /^GLOBAL_(.*)$/ ) {
+    unless ( $function eq 'GLOBAL_bless' ) {
       push @import, $function;
       next;
     }
-    my $global = $1;
-    no strict 'refs';
-    *{ 'CORE::GLOBAL::' . $global } = \&{$global};
+    adj_magic( 1 ) unless is_magic();
   }
   return $class->SUPER::import( @import );
 }
 
-sub bless {
-  my $reference = shift;
-  my $class     = @_ ? shift : scalar caller;
-  my $object    = CORE::bless( $reference, $class );
-  Devel::LeakTrack::Object::track( $object );
-  return $object;
+{
+  my $magic = 0;
+
+  sub adj_magic {
+    my $adj = shift;
+    $magic = 0 if ( $magic += $adj ) < 0;
+    switch_bless( $magic );
+  }
+
+  sub is_magic { $magic }
 }
+
+sub switch_bless {
+  my $magic = shift;
+  no warnings 'redefine';
+  *CORE::GLOBAL::bless = $magic ? magic_bless() : plain_bless();
+}
+
+sub plain_bless {
+  sub {
+    my $reference = shift;
+    my $class = @_ ? shift : scalar caller;
+    return CORE::bless( $reference, $class );
+  };
+}
+
+sub magic_bless {
+  sub {
+    my $reference = shift;
+    my $class     = @_ ? shift : scalar caller;
+    my $object    = CORE::bless( $reference, $class );
+    unless ( $class->isa( 'Devel::LeakTrack::Object::State' ) ) {
+      Devel::LeakTrack::Object::track( $object );
+    }
+    return $object;
+  };
+}
+
+sub state { return {%OBJECT_COUNT} }
 
 sub track {
   my $object = shift;
-  my $class  = Scalar::Util::blessed( $object );
-  unless ( defined $class ) {
-    Carp::carp(
-      "Devel::LeakTrack::Object::track was passed a non-object" );
-  }
-  my $address = Scalar::Util::refaddr( $object );
+  my $class  = blessed $object;
+  carp "Devel::LeakTrack::Object::track was passed a non-object"
+   unless defined $class;
+  my $address = refaddr $object;
+  print "# Tracking $class($address)\n";
   if ( $TRACKED{$address} ) {
     if ( $class eq $TRACKED{$address} ) {
       # Reblessing into the same class, ignore
@@ -198,7 +215,6 @@ END_DESTROY
 sub make_next {
   my $class = shift;
 
-  # Build the %DESTROY_NEXT entries to support DESTROY_stub
   $DESTROY_NEXT{$class} = {};
   my @stack = ( $class );
   my %seen  = ( UNIVERSAL => 1 );
@@ -206,27 +222,23 @@ sub make_next {
   while ( my $c = shift @stack ) {
     next if $seen{$c}++;
 
-    # Does the class have it's own DESTROY method
     my $has_destroy
      = $DESTROY_STUBBED{$c}
-     ? !!exists $DESTROY_ORIGINAL{$c}
-     : !!( exists ${"${c}::"}{DESTROY} and *{"${c}::DESTROY"}{CODE} );
+     ? exists $DESTROY_ORIGINAL{$c}
+     : ( exists ${"${c}::"}{DESTROY} and *{"${c}::DESTROY"}{CODE} );
+
     if ( $has_destroy ) {
-      # Everything in the queue has this class as it's next call
       while ( @queue ) {
         $DESTROY_NEXT{$class}->{ shift( @queue ) } = $c;
       }
     }
     else {
-      # This class goes onto the queue
       push @queue, $c;
     }
 
-    # Add the @ISA to the search stack.
     unshift @stack, @{"${c}::ISA"};
   }
 
-  # Any else has no target to go to
   while ( @queue ) {
     $DESTROY_NEXT{$class}->{ shift @queue } = '';
   }
