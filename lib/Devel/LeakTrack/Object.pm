@@ -1,22 +1,24 @@
 package Devel::LeakTrack::Object;
 
-use 5.005;
+use 5.008;
+
 # We abuse refs a LOT
-use strict qw{ vars subs };
+use strict;
+use warnings;
+
 use Carp         ();
 use Scalar::Util ();
 
-use vars qw{ $VERSION @ISA @EXPORT_OK };
-use vars
- qw{ %OBJECT_COUNT %TRACKED %DESTROY_ORIGINAL %DESTROY_STUBBED %DESTROY_NEXT };
+use base qw( Exporter );
+our @EXPORT_OK = qw( track bless status );
+
+use vars qw( $VERSION @EXPORT_OK );
+use vars qw(
+ %OBJECT_COUNT %TRACKED %DESTROY_ORIGINAL %DESTROY_STUBBED
+ %DESTROY_NEXT
+);
 
 BEGIN {
-  $VERSION = '0.1';
-
-  # Set up exports
-  require Exporter;
-  @ISA       = qw(Exporter);
-  @EXPORT_OK = qw(track bless status);
 
   # Set up state storage (primary for clarity)
   %OBJECT_COUNT     = ();
@@ -24,6 +26,53 @@ BEGIN {
   %DESTROY_ORIGINAL = ();
   %DESTROY_STUBBED  = ();
 }
+
+=head1 NAME
+
+Devel::LeakTrack::Object - Scoped checks for object leaks
+
+=head1 VERSION
+
+This document describes Devel::LeakTrack::Object version 0.01
+
+=cut
+
+our $VERSION = '0.01';
+
+=head1 SYNOPSIS
+
+  # Track a single object
+  use Devel::LeakTrack::Object;
+  my $obj = Foo::Bar->new;
+  Devel::LeakTrack::Object::track($obj);
+  
+  # Track every object
+  use Devel::LeakTrack::Object qw{ GLOBAL_bless };
+
+=head1 DESCRIPTION
+
+This module provides tracking of objects, for the purpose of
+detecting memory leaks due to circular references or innappropriate
+caching schemes.
+
+Object tracking can be enabled on a per object basis. Any objects thus
+tracked are remembered until DESTROYed; details of any objects left are
+printed out to stderr at END-time.
+
+  use Devel::LeakTrack::Object qw(GLOBAL_bless);
+
+This form overloads B<bless> to track construction and destruction of
+all objects. As an alternative, by importing bless, you can just track
+the objects of the caller code that is doing the use.
+
+If you use GLOBAL_bless to overload the bless function, please note that
+it will ONLY apply to bless for modules loaded AFTER
+Devel::LeakTrack::Object has enabled the hook.
+
+Any modules already loaded will have already bound to CORE::bless and
+will not be impacted.
+
+=cut
 
 sub import {
   my $class  = shift;
@@ -35,6 +84,7 @@ sub import {
       next;
     }
     my $global = $1;
+    no strict 'refs';
     *{ 'CORE::GLOBAL::' . $global } = \&{$global};
   }
   return $class->SUPER::import( @import );
@@ -200,67 +250,41 @@ END {
 
 __END__
 
+=head1 DEPENDENCIES
 
-=head1 NAME
-
-Devel::LeakTrack::Object - Detect leaks of objects 
-
-=head1 SYNOPSIS
-
-  # Track a single object
-  use Devel::LeakTrack::Object;
-  my $obj = Foo::Bar->new;
-  Devel::LeakTrack::Object::track($obj);
-  
-  # Track every object
-  use Devel::LeakTrack::Object qw{ GLOBAL_bless };
-
-=head1 DESCRIPTION
-
-This module provides tracking of objects, for the purpose of detecting memory
-leaks due to circular references or innappropriate caching schemes.
-
-Object tracking can be enabled on a per object basis. Any objects
-thus tracked are remembered until DESTROYed; details of any objects
-left are printed out to stderr at END-time.
-
-  use Devel::LeakTrack::Object qw(GLOBAL_bless);
-
-This form overloads B<bless> to track construction and destruction of all
-objects. As an alternative, by importing bless, you can just track the
-objects of the caller code that is doing the use.
-
-If you use GLOBAL_bless to overload the bless function, please note that
-it will ONLY apply to bless for modules loaded AFTER Devel::LeakTrack::Object
-has enabled the hook.
-
-Any modules already loaded will have already bound to CORE::bless and will
-not be impacted.
-
-=head1 BUGS
-
-Please report bugs to http://rt.cpan.org
-
-=head1 AUTHOR
-
-Adam Kennedy <adamk@cpan.org>
+None.
 
 =head1 SEE ALSO
 
-L<Devel::Leak>
+L<Devel::Leak::Object>
 
-=head1 COPYRIGHT
+=head1 INCOMPATIBILITIES
 
-Copyright 2007 Adam Kennedy.
+None reported.
 
-Rewritten from original copyright 2004 Ivor Williams.
+=head1 BUGS AND LIMITATIONS
 
-Some documentation also copyright 2004 Ivor Williams.
+Please report any bugs or feature requests to
+C<bug-devel-leaktrack-object@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org>.
 
-This program is free software; you can redistribute
-it and/or modify it under the same terms as Perl itself.
+=head1 AUTHOR
 
-The full text of the license can be found in the
-LICENSE file included with this module.
+Andy Armstrong  C<< <andy@hexten.net> >>
+
+Based on code taken from Adam Kennedy's L<Devel::Leak::Object> which carries this copyright notice:
+
+  Copyright 2007 Adam Kennedy.
+
+  Rewritten from original copyright 2004 Ivor Williams.
+
+  Some documentation also copyright 2004 Ivor Williams.
+
+=head1 LICENCE AND COPYRIGHT
+
+Copyright (c) 2009, Andy Armstrong C<< <andy@hexten.net> >>.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic>.
 
 =cut
