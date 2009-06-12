@@ -139,6 +139,7 @@ sub track {
 
   # If needed, initialise the new class
   unless ( $DESTROY_STUBBED{$class} ) {
+    no strict 'refs';
     if ( exists ${ $class . '::' }{DESTROY}
       and *{ $class . '::DESTROY' }{CODE} ) {
       # Stash the pre-existing DESTROY function
@@ -214,6 +215,7 @@ END_DESTROY
 
 sub make_next {
   my $class = shift;
+  no strict 'refs';
 
   $DESTROY_NEXT{$class} = {};
   my @stack = ( $class );
