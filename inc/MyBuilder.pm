@@ -82,9 +82,11 @@ sub ACTION_tidy {
   my @extra = qw( Build.PL );
 
   my %found_files = map { %$_ } $self->find_pm_files,
-   $self->_find_file_by_type( 'pm', 't' ),
    $self->_find_file_by_type( 'pm', 'inc' ),
-   $self->_find_file_by_type( 't',  't' );
+   $self->_find_file_by_type( 'pm', 't' ),
+   $self->_find_file_by_type( 't',  't' ),
+   $self->_find_file_by_type( 'pm', 'xt' ),
+   $self->_find_file_by_type( 't',  'xt' );
 
   my @files = ( keys %found_files,
     map { $self->localize_file_path( $_ ) } @extra );

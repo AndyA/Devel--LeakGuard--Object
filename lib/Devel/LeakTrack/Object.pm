@@ -7,73 +7,78 @@ use Carp         ();
 use Scalar::Util ();
 
 use vars qw{ $VERSION @ISA @EXPORT_OK };
-use vars qw{ %OBJECT_COUNT %TRACKED %DESTROY_ORIGINAL %DESTROY_STUBBED %DESTROY_NEXT };
+use vars
+ qw{ %OBJECT_COUNT %TRACKED %DESTROY_ORIGINAL %DESTROY_STUBBED %DESTROY_NEXT };
+
 BEGIN {
-	$VERSION     = '0.1';
+  $VERSION = '0.1';
 
-    # Set up exports
-	require Exporter;
-	@ISA         = qw(Exporter);
-	@EXPORT_OK   = qw(track bless status);
+  # Set up exports
+  require Exporter;
+  @ISA       = qw(Exporter);
+  @EXPORT_OK = qw(track bless status);
 
-    # Set up state storage (primary for clarity)
-    %OBJECT_COUNT     = ();
-    %TRACKED          = ();
-    %DESTROY_ORIGINAL = ();
-    %DESTROY_STUBBED  = ();
+  # Set up state storage (primary for clarity)
+  %OBJECT_COUNT     = ();
+  %TRACKED          = ();
+  %DESTROY_ORIGINAL = ();
+  %DESTROY_STUBBED  = ();
 }
 
 sub import {
-    my $class  = shift;
-    my @import = ();
-    while ( @_ ) {
-        my $function = shift;
-        unless ( $function =~ /^GLOBAL_(.*)$/ ) {
-            push @import, $function;
-            next;
-        }
-        my $global = $1;
-        *{'CORE::GLOBAL::' . $global} = \&{$global};
+  my $class  = shift;
+  my @import = ();
+  while ( @_ ) {
+    my $function = shift;
+    unless ( $function =~ /^GLOBAL_(.*)$/ ) {
+      push @import, $function;
+      next;
     }
-    return $class->SUPER::import(@import);
+    my $global = $1;
+    *{ 'CORE::GLOBAL::' . $global } = \&{$global};
+  }
+  return $class->SUPER::import( @import );
 }
 
 sub bless {
-    my $reference = shift;
-    my $class     = @_ ? shift : scalar caller;
-    my $object    = CORE::bless($reference, $class);
-    Devel::LeakTrack::Object::track($object);
-    return $object;
-};
+  my $reference = shift;
+  my $class     = @_ ? shift : scalar caller;
+  my $object    = CORE::bless( $reference, $class );
+  Devel::LeakTrack::Object::track( $object );
+  return $object;
+}
 
 sub track {
-	my $object = shift;
-    my $class  = Scalar::Util::blessed($object);
-    unless ( defined $class ) {
-        Carp::carp("Devel::LeakTrack::Object::track was passed a non-object");
+  my $object = shift;
+  my $class  = Scalar::Util::blessed( $object );
+  unless ( defined $class ) {
+    Carp::carp(
+      "Devel::LeakTrack::Object::track was passed a non-object" );
+  }
+  my $address = Scalar::Util::refaddr( $object );
+  if ( $TRACKED{$address} ) {
+    if ( $class eq $TRACKED{$address} ) {
+      # Reblessing into the same class, ignore
+      return $OBJECT_COUNT{$class};
     }
-    my $address = Scalar::Util::refaddr($object);
-    if ( $TRACKED{$address} ) {
-        if ( $class eq $TRACKED{$address} ) {
-            # Reblessing into the same class, ignore
-            return $OBJECT_COUNT{$class};
-        } else {
-            # Reblessing into a different class
-            $OBJECT_COUNT{$TRACKED{$address}}--;
-        }
+    else {
+      # Reblessing into a different class
+      $OBJECT_COUNT{ $TRACKED{$address} }--;
     }
+  }
 
-    # Set or over-write the class name for the tracked object
-    $TRACKED{$address} = $class;
+  # Set or over-write the class name for the tracked object
+  $TRACKED{$address} = $class;
 
-    # If needed, initialise the new class
-    unless ( $DESTROY_STUBBED{$class} ) {
-        if ( exists ${$class.'::'}{DESTROY} and *{$class.'::DESTROY'}{CODE} ) {
-            # Stash the pre-existing DESTROY function
-            $DESTROY_ORIGINAL{$class} = \&{$class . '::DESTROY'};
-        }
-        $DESTROY_STUBBED{$class} = 1;
-        eval <<"END_DESTROY";
+  # If needed, initialise the new class
+  unless ( $DESTROY_STUBBED{$class} ) {
+    if ( exists ${ $class . '::' }{DESTROY}
+      and *{ $class . '::DESTROY' }{CODE} ) {
+      # Stash the pre-existing DESTROY function
+      $DESTROY_ORIGINAL{$class} = \&{ $class . '::DESTROY' };
+    }
+    $DESTROY_STUBBED{$class} = 1;
+    eval <<"END_DESTROY";
 package $class;\
 no warnings;
 sub DESTROY {
@@ -127,66 +132,68 @@ sub DESTROY {
     return;
 }
 END_DESTROY
-        if ( $@ ) {
-            die "Failed to generate DESTROY method for $class: $@";
-        }
-
-        # Pre-emptively populate the DESTROY_NEXT map
-        unless ( $DESTROY_NEXT{$class} ) {
-            make_next($class);
-        }
+    if ( $@ ) {
+      die "Failed to generate DESTROY method for $class: $@";
     }
 
-    $OBJECT_COUNT{$TRACKED{$address}}++;
+    # Pre-emptively populate the DESTROY_NEXT map
+    unless ( $DESTROY_NEXT{$class} ) {
+      make_next( $class );
+    }
+  }
+
+  $OBJECT_COUNT{ $TRACKED{$address} }++;
 }
 
 sub make_next {
-        my $class = shift;
+  my $class = shift;
 
-        # Build the %DESTROY_NEXT entries to support DESTROY_stub
-        $DESTROY_NEXT{$class} = {};
-        my @stack = ( $class );
-        my %seen  = ( UNIVERSAL => 1 );
-        my @queue = ();
-        while ( my $c = shift @stack ) {
-            next if $seen{$c}++;
-        
-            # Does the class have it's own DESTROY method
-            my $has_destroy = $DESTROY_STUBBED{$c}
-                ? !! exists $DESTROY_ORIGINAL{$c}
-                : !! (exists ${"${c}::"}{DESTROY} and *{"${c}::DESTROY"}{CODE});
-            if ( $has_destroy ) {
-                # Everything in the queue has this class as it's next call
-                while ( @queue ) {
-                    $DESTROY_NEXT{$class}->{shift(@queue)} = $c;
-                }
-            } else {
-                # This class goes onto the queue
-                push @queue, $c;
-            }
+  # Build the %DESTROY_NEXT entries to support DESTROY_stub
+  $DESTROY_NEXT{$class} = {};
+  my @stack = ( $class );
+  my %seen  = ( UNIVERSAL => 1 );
+  my @queue = ();
+  while ( my $c = shift @stack ) {
+    next if $seen{$c}++;
 
-            # Add the @ISA to the search stack.
-            unshift @stack, @{"${c}::ISA"};
-        }
+    # Does the class have it's own DESTROY method
+    my $has_destroy
+     = $DESTROY_STUBBED{$c}
+     ? !!exists $DESTROY_ORIGINAL{$c}
+     : !!( exists ${"${c}::"}{DESTROY} and *{"${c}::DESTROY"}{CODE} );
+    if ( $has_destroy ) {
+      # Everything in the queue has this class as it's next call
+      while ( @queue ) {
+        $DESTROY_NEXT{$class}->{ shift( @queue ) } = $c;
+      }
+    }
+    else {
+      # This class goes onto the queue
+      push @queue, $c;
+    }
 
-        # Any else has no target to go to
-        while ( @queue ) {
-            $DESTROY_NEXT{$class}->{shift @queue} = '';
-        }
+    # Add the @ISA to the search stack.
+    unshift @stack, @{"${c}::ISA"};
+  }
 
-        return 1;
+  # Any else has no target to go to
+  while ( @queue ) {
+    $DESTROY_NEXT{$class}->{ shift @queue } = '';
+  }
+
+  return 1;
 }
 
 sub status {
-	print "Tracked objects by class:\n";
-	for (sort keys %OBJECT_COUNT) {
-        next unless $OBJECT_COUNT{$_}; # Don't list class with count zero
-		printf "%-40s %d\n", $_, $OBJECT_COUNT{$_};
-	}
+  print "Tracked objects by class:\n";
+  for ( sort keys %OBJECT_COUNT ) {
+    next unless $OBJECT_COUNT{$_};    # Don't list class with count zero
+    printf "%-40s %d\n", $_, $OBJECT_COUNT{$_};
+  }
 }
 
 END {
-	status();
+  status();
 }
 
 1;

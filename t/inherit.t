@@ -6,30 +6,30 @@ use Test::More tests => 18;
 package A;
 
 sub new {
-    my ($pkg,$par) = @_;
+  my ( $pkg, $par ) = @_;
 
-    bless {name => $par, constructor => 'A'},$pkg;
+  bless { name => $par, constructor => 'A' }, $pkg;
 }
 
-package Blah;	# B conflicts with the builtin B::
+package Blah;    # B conflicts with the builtin B::
 use base qw/A/;
 
 package E;
 use strict;
 
 sub new {
-    my ($pkg,$par) = @_;
+  my ( $pkg, $par ) = @_;
 
-    bless {name => $par, constructor => 'E'},$pkg;
+  bless { name => $par, constructor => 'E' }, $pkg;
 }
 
 use vars qw{$msg};
 $msg = '';
 
 sub DESTROY {
-    my $self = shift;
+  my $self = shift;
 
-    $msg = "E::DESTROY called for ".$self->{name};
+  $msg = "E::DESTROY called for " . $self->{name};
 }
 
 package D;
@@ -44,91 +44,114 @@ use strict;
 
 #01
 BEGIN {
-    use_ok( 'Devel::LeakTrack::Object' );
+  use_ok( 'Devel::LeakTrack::Object' );
 }
 
-my $foo = C->new('foo');
+my $foo = C->new( 'foo' );
 
 #02
-isa_ok($foo, 'C', "Normal multi inherit");
+isa_ok( $foo, 'C', "Normal multi inherit" );
 
 #03
-is($foo->{constructor},'A','Inherits new from A');
+is( $foo->{constructor}, 'A', 'Inherits new from A' );
 
 undef $foo;
 
 #04
-is($E::msg, 'E::DESTROY called for foo', 'Inherited DESTROY method');
+is( $E::msg, 'E::DESTROY called for foo', 'Inherited DESTROY method' );
 
-$foo = C->new('foo2');
-my $bar = D->new('bar');
+$foo = C->new( 'foo2' );
+my $bar = D->new( 'bar' );
 
-Devel::LeakTrack::Object::track($bar);
+Devel::LeakTrack::Object::track( $bar );
 
 #05
-is($bar->{constructor},'E','Inherits new from E');
+is( $bar->{constructor}, 'E', 'Inherits new from E' );
 
 #06
-is($Devel::LeakTrack::Object::OBJECT_COUNT{D}, 1, 'D object count');
+is( $Devel::LeakTrack::Object::OBJECT_COUNT{D}, 1, 'D object count' );
 
 undef $bar;
 
 #07
-is($Devel::LeakTrack::Object::OBJECT_COUNT{D}, 0, 'D object count decremented');
+is( $Devel::LeakTrack::Object::OBJECT_COUNT{D},
+  0, 'D object count decremented' );
 
 #08
-is($E::msg, 'E::DESTROY called for bar', 'Inherited DESTROY method D::bar');
+is(
+  $E::msg,
+  'E::DESTROY called for bar',
+  'Inherited DESTROY method D::bar'
+);
 
 undef $foo;
 
 #09
-is($E::msg, 'E::DESTROY called for foo2', 'Inherited DESTROY method C::foo2');
+is(
+  $E::msg,
+  'E::DESTROY called for foo2',
+  'Inherited DESTROY method C::foo2'
+);
 
-$foo = C->new('foo3');
-$bar = Blah->new('bar');
+$foo = C->new( 'foo3' );
+$bar = Blah->new( 'bar' );
 
-Devel::LeakTrack::Object::track($bar);
+Devel::LeakTrack::Object::track( $bar );
 
 #10
-is($bar->{constructor},'A','Inherits new from A');
+is( $bar->{constructor}, 'A', 'Inherits new from A' );
 
 #11
-is($Devel::LeakTrack::Object::OBJECT_COUNT{Blah}, 1, 'Blah object count');
+is( $Devel::LeakTrack::Object::OBJECT_COUNT{Blah},
+  1, 'Blah object count' );
 
 undef $bar;
 
 #12
-is($Devel::LeakTrack::Object::OBJECT_COUNT{Blah}, 0, 'Blah object count decremented');
+is( $Devel::LeakTrack::Object::OBJECT_COUNT{Blah},
+  0, 'Blah object count decremented' );
 
 undef $foo;
 
 #13
-is($E::msg, 'E::DESTROY called for foo3', 'Inherited DESTROY method C::foo3');
+is(
+  $E::msg,
+  'E::DESTROY called for foo3',
+  'Inherited DESTROY method C::foo3'
+);
 
+$foo = C->new( 'foo4' );
+$bar = C->new( 'bar' );
 
-$foo = C->new('foo4');
-$bar = C->new('bar');
-
-Devel::LeakTrack::Object::track($bar);
+Devel::LeakTrack::Object::track( $bar );
 
 #14
-is($bar->{constructor},'A','Inherits new from A');
+is( $bar->{constructor}, 'A', 'Inherits new from A' );
 
 #15
-is($Devel::LeakTrack::Object::OBJECT_COUNT{C}, 1, 'C object count');
+is( $Devel::LeakTrack::Object::OBJECT_COUNT{C}, 1, 'C object count' );
 
 undef $bar;
 
 #16
-is($Devel::LeakTrack::Object::OBJECT_COUNT{C}, 0, 'C object count decremented');
+is( $Devel::LeakTrack::Object::OBJECT_COUNT{C},
+  0, 'C object count decremented' );
 
 #17
-is($E::msg, 'E::DESTROY called for bar', 'Inherited DESTROY method C::bar');
+is(
+  $E::msg,
+  'E::DESTROY called for bar',
+  'Inherited DESTROY method C::bar'
+);
 
-Devel::LeakTrack::Object::track($foo);
+Devel::LeakTrack::Object::track( $foo );
 
 undef $foo;
 
 #18
-is($E::msg, 'E::DESTROY called for foo4', 'Inherited DESTROY method C::foo4');
+is(
+  $E::msg,
+  'E::DESTROY called for foo4',
+  'Inherited DESTROY method C::foo4'
+);
 
