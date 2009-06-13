@@ -9,9 +9,11 @@ use Carp;
 use Data::Dumper;
 use Scalar::Util qw( blessed refaddr );
 
+use Devel::LeakGuard::Object::State;
+
 use base qw( Exporter );
 
-our @EXPORT_OK = qw( track status );
+our @EXPORT_OK = qw( adj_magic track state status leakguard );
 
 our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
   %TRACKED );
@@ -86,7 +88,7 @@ will not be impacted.
     my $class  = shift;
     my @import = @_;
 
-    {
+    unless ( *CORE::GLOBAL::bless eq $plain_bless ) {
       # We don't actually need to install our version of bless here but
       # it'd be nice if any problems that it caused showed up sooner
       # rather than later.
@@ -99,7 +101,8 @@ will not be impacted.
 
     adj_magic( 1 ) if grep $_ eq 'GLOBAL_bless', @import;
 
-    return $class->SUPER::import( grep $_ ne 'GLOBAL_bless', @import );
+    return __PACKAGE__->export_to_level( 1, $class,
+      grep $_ ne 'GLOBAL_bless', @import );
   }
 
   sub adj_magic {
@@ -116,6 +119,11 @@ will not be impacted.
       }
     }
   }
+}
+
+sub leakguard(&@) {
+  my $block = shift;
+
 }
 
 sub state { return {%OBJECT_COUNT} }

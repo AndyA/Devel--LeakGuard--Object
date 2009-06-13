@@ -3,27 +3,28 @@ package Devel::LeakGuard::Object::State;
 use strict;
 use warnings;
 
-use Devel::LeakGuard::Object;
+use Carp;
+use Devel::LeakGuard::Object qw( adj_magic state );
 
 =head1 NAME
 
-Devel::LeakGuard::Object::State - Scoped object leak checking
+State - Scoped object leak checking
 
 =cut
 
 sub new {
-  my ( $class, %options ) = @_;
-  Devel::LeakGuard::Object::adj_magic( 1 );
-  return bless { %options, state => Devel::LeakGuard::Object::state() },
-   $class;
+  my $class = shift;
+  croak "expected a number of key => value options" if @_ % 1;
+  adj_magic( 1 );
+  return bless { @_, state => state() }, $class;
 }
 
 sub DESTROY {
   my $self = shift;
   my ( $pkg, $file, $line ) = caller;
 
-  Devel::LeakGuard::Object::adj_magic( -1 );
-  my $state  = Devel::LeakGuard::Object::state();
+  adj_magic( -1 );
+  my $state  = state();
   my %seen   = ();
   my %report = ();
 
