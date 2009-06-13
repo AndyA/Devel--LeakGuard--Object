@@ -14,7 +14,11 @@ use Devel::LeakGuard::Object::State;
 use base qw( Exporter );
 
 our @EXPORT_OK = qw( adj_magic track state status leakguard );
-our %OPTIONS = ( at_end => 0 );
+
+our %OPTIONS = (
+  at_end => 0,
+  stderr => 0
+);
 
 our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
   %TRACKED );
@@ -106,6 +110,7 @@ will not be impacted.
         adj_magic( 1 );
       }
       elsif ( $a =~ /^:(.+)$/ ) {
+        croak "Bad option: $1" unless exists $OPTIONS{$1};
         $OPTIONS{$1}++;
       }
       else {
@@ -269,10 +274,11 @@ sub _mk_next {
 }
 
 sub status {
-  print "Tracked objects by class:\n";
+  my $fh = $OPTIONS{stderr} ? *STDERR : *STDOUT;
+  print $fh "Tracked objects by class:\n";
   for ( sort keys %OBJECT_COUNT ) {
     next unless $OBJECT_COUNT{$_};    # Don't list class with count zero
-    printf "%-40s %d\n", $_, $OBJECT_COUNT{$_};
+    print $fh sprintf "%-40s %d\n", $_, $OBJECT_COUNT{$_};
   }
 }
 
