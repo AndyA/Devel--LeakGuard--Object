@@ -13,16 +13,6 @@ State - Scoped object leak checking
 
 =cut
 
-# Handy for debugging
-sub _caller() {
-  my $pos = 0;
-  while ( 1 ) {
-    my ( $pkg, $file, $line ) = caller( $pos++ );
-    return $pkg, $file, $line
-     unless $pkg =~ /^Devel::LeakGuard::Object/;
-  }
-}
-
 sub new {
   my $class = shift;
   my ( $pkg, $file, $line ) = caller;
@@ -31,18 +21,22 @@ sub new {
   my %opt = @_;
   my $self = bless { state => state() }, $class;
 
-  my $on_leak = delete $opt{on_leak} || 'warn';
-  $self->{on_leak} = $on_leak eq 'die'
-   ? sub {
-    $class->_with_report( shift, sub { croak @_ } );
-   }
-   : $on_leak eq 'warn' ? sub {
-    $class->_with_report( shift, sub { carp @_ } );
-   }
-   : $on_leak;
+  {
+    my $on_leak = delete $opt{on_leak} || 'warn';
+    $self->{on_leak} = $on_leak eq 'die'
+     ? sub {
+      $class->_with_report( shift, sub { croak @_ } );
+     }
+     : $on_leak eq 'warn' ? sub {
+      $class->_with_report( shift, sub { carp @_ } );
+     }
+     : $on_leak;
 
-  croak "on_leak must be a coderef, 'warn' or 'die'"
-   unless 'CODE' eq ref $self->{on_leak};
+    croak "on_leak must be a coderef, 'warn' or 'die'"
+     unless 'CODE' eq ref $self->{on_leak};
+  }
+
+  $self->{$_} = delete $opt{$_} for qw( expect only exclude );
 
   croak "invalid option(s): ", sort keys %opt if keys %opt;
 
@@ -79,6 +73,43 @@ sub _fmt_report {
   return join "\n", @r;
 }
 
+sub _make_matcher {
+  my ( $self, $filter ) = @_;
+  my @m = ();
+  for my $elt ( 'ARRAY' eq ref $filter ? @$filter : $filter ) {
+    unless ( ref $elt ) {
+      my $pat = join '',
+       map { '*' eq $_ ? '.*?' : quotemeta $_ } split //, $elt;
+      $elt = qr{^$pat$}o;
+    }
+    if ( 'Regexp' eq ref $elt ) {
+      push @m, sub { $_ =~ $elt };
+    }
+    elsif ( 'CODE' eq ref $elt ) {
+      push @m, $elt;
+    }
+    else {
+      croak "Bad filter spec";
+    }
+  }
+
+  return sub {
+    local $_ = shift;
+    for my $m ( @m ) {
+      return 1 if $m->();
+    }
+    return;
+  };
+}
+
+sub _filter {
+  my ( $self, $filter, $invert, @list ) = @_;
+  my $m = $self->_make_matcher( $filter );
+  return $invert
+   ? grep { !$m->( $_ ) } @list
+   : grep { $m->( $_ ) } @list;
+}
+
 sub done {
   my $self = shift;
   local $@;
@@ -98,9 +129,33 @@ sub done {
     $report{$class} = [ $before, $after ] if $before != $after;
   }
 
-  if ( keys %report ) {
-    $self->{on_leak}( \%report ) if $self->{on_leak};
+  my @keep = keys %report;
+  return unless @keep;
+
+  @keep = $self->_filter( $self->{only}, 0, @keep )
+   if defined $self->{only};
+  return unless @keep;
+
+  @keep = $self->_filter( $self->{exclude}, 1, @keep )
+   if defined $self->{exclude};
+  return unless @keep;
+
+  if ( my $exp = $self->{expect} ) {
+    my @k = ();
+    PKG: for my $pkg ( @keep ) {
+      if ( defined( my $range = $exp->{$pkg} ) ) {
+        $range = [ $range, $range ] unless 'ARRAY' eq ref $range;
+        my $delta = $report{$pkg}[1] - $report{$pkg}[0];
+        next PKG if $delta >= $range->[0] && $delta <= $range->[1];
+      }
+      push @k, $pkg;
+    }
+    @keep = @k;
   }
+  return unless @keep;
+  my %filtrep = ();
+  $filtrep{$_} = $report{$_} for @keep;
+  $self->{on_leak}( \%filtrep );
 }
 
 sub DESTROY { shift->done }

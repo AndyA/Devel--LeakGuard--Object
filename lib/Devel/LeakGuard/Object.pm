@@ -43,13 +43,71 @@ our $VERSION = '0.01';
   Devel::LeakGuard::Object::track($obj);
   
   # Track every object
-  use Devel::LeakGuard::Object qw{ GLOBAL_bless };
+  use Devel::LeakGuard::Object qw( GLOBAL_bless );
+
+  # Track every object, summary at exit
+  use Devel::LeakGuard::Object qw( GLOBAL_bless :at_end );
+
+  # Track a block of code, warning on leaks
+  leakguard {
+    # your potentially leaky code here
+  };
+
+  # Track a block of code, die on leaks
+  leakguard {
+    # your potentially leaky code here
+  }
+  on_leak => 'die';
 
 =head1 DESCRIPTION
 
 This module provides tracking of objects, for the purpose of
 detecting memory leaks due to circular references or innappropriate
 caching schemes.
+
+It is derived from, and backwards compatible with Adam Kennedy's
+L<Devel::Leak::Object>. Any errors are mine.
+
+It works by overridding C<bless> and adding a synthetic C<DESTROY>
+method to any tracked classes so that it can maintain a count of blessed
+objects per-class.
+
+Object tracking can be enabled:
+
+=over
+
+=item * for an individual object
+
+=item * for a block of code
+
+=item * globally
+
+=back
+
+=head2 Tracking an individual object
+
+Track individual objects like this:
+
+  use Devel::LeakGuard::Object qw( track );
+
+  # Later...
+  track( my $obj = new Foo );
+
+=head2 Tracking object leaks in a block of code
+
+To detect any object leaks in a block of code:
+
+  use Devel::LeakGuard::Object qw( leakguard );
+
+  leakguard {
+    # your code here.
+  };
+
+=head2 Tracking global object leaks
+
+  use Devel::LeakGuard::Object qw( GLOBAL_bless );
+
+=head2 Finding out what leaked
 
 Object tracking can be enabled on a per object basis. Any objects thus
 tracked are remembered until DESTROYed; details of any objects left are
