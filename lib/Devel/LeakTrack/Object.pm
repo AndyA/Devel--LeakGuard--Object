@@ -6,6 +6,7 @@ use strict;
 use warnings;
 
 use Carp;
+use Data::Dumper;
 use Scalar::Util qw( blessed refaddr );
 
 use base qw( Exporter );
@@ -145,60 +146,12 @@ sub track {
       $DESTROY_ORIGINAL{$class} = \&{ $class . '::DESTROY' };
     }
     $DESTROY_STUBBED{$class} = 1;
-    eval <<"END_DESTROY";
-package $class;\
-no warnings;
-sub DESTROY {
-    my \$class   = Scalar::Util::blessed(\$_[0]);
-    my \$address = Scalar::Util::refaddr(\$_[0]);
-    unless ( defined \$class ) {
-        die "Unexpected error: First param to DESTROY is no an object";
+    {
+      no strict 'refs';
+      no warnings 'redefine';
+      *{"${class}::DESTROY"} = mk_destroy( $class );
     }
 
-    # Don't do anything unless tracking for the specific object is set
-    my \$original = \$Devel::LeakTrack::Object::TRACKED{\$address};
-    if ( \$original ) {
-        ### TODO - We COULD add a check that $class eq
-        #          \$Devel::LeakTrack::Object::TRACKED{\$address}
-        #          and then not decrement unless it is the same.
-        #          However, in practice it should ALWAYS be the same if
-        #          we already have \$Devel::LeakTrack::Object::TRACKED{\$address}
-        #          true still, and if for some reason this is wrong, we get
-        #          a false positive in the leak counting.
-        #          This additional check may be able to be added at a later
-        #          date if it turns out to be needed.
-        #          if ( \$class eq \$Devel::LeakTrack::Object::TRACKED{\$address} ) { ... }
-        if ( \$class ne \$original ) {
-            warn "Object class '\$class' does not match original \$Devel::LeakTrack::Object::TRACKED{\$address}";
-        }
-        \$Devel::LeakTrack::Object::OBJECT_COUNT{\$original}--;
-        if ( \$Devel::LeakTrack::Object::OBJECT_COUNT{\$original} < 0 ) {
-            warn "Object count for \$Devel::LeakTrack::Object::TRACKED{\$address} negative (\$Devel::LeakTrack::Object::OBJECT_COUNT{\$original})";
-        }
-        delete \$Devel::LeakTrack::Object::TRACKED{\$address};
-
-        # Hand of to the regular DESTROY method, or pass up to the SUPERclass if there isn't one
-        if ( \$Devel::LeakTrack::Object::DESTROY_ORIGINAL{\$original} ) {
-            goto \&{\$Devel::LeakTrack::Object::DESTROY_ORIGINAL{\$original}};
-        }
-    } else {
-        \$original = \$class;
-    }
-
-    # If we don't have the DESTROY_NEXT for this class, populate it
-    unless ( \$Devel::LeakTrack::Object::DESTROY_NEXT{\$original} ) {
-        Devel::LeakTrack::Object::make_next(\$original);
-    }
-    my \$super = \$Devel::LeakTrack::Object::DESTROY_NEXT{\$original}->{'$class'};
-    unless ( defined \$super ) {
-        die "Failed to find super-method for class \$class in package $class";
-    }
-    if ( \$super ) {
-        goto \&{\$super.'::DESTROY'};
-    }
-    return;
-}
-END_DESTROY
     if ( $@ ) {
       die "Failed to generate DESTROY method for $class: $@";
     }
@@ -210,6 +163,53 @@ END_DESTROY
   }
 
   $OBJECT_COUNT{ $TRACKED{$address} }++;
+}
+
+sub mk_destroy {
+  my $pkg = shift;
+
+  return sub {
+    my $self    = $_[0];
+    my $class   = Scalar::Util::blessed( $self );
+    my $address = Scalar::Util::refaddr( $self );
+    unless ( defined $class ) {
+      die "Unexpected error: First param to DESTROY is no an object";
+    }
+
+    # Don't do anything unless tracking for the specific object is set
+    my $original = $Devel::LeakTrack::Object::TRACKED{$address};
+    if ( $original ) {
+      if ( $class ne $original ) {
+        warn
+         "Object class '$class' does not match original $Devel::LeakTrack::Object::TRACKED{$address}";
+      }
+      $Devel::LeakTrack::Object::OBJECT_COUNT{$original}--;
+      if ( $Devel::LeakTrack::Object::OBJECT_COUNT{$original} < 0 ) {
+        warn
+         "Object count for $Devel::LeakTrack::Object::TRACKED{$address} negative ($Devel::LeakTrack::Object::OBJECT_COUNT{$original})";
+      }
+      delete $Devel::LeakTrack::Object::TRACKED{$address};
+
+      if ( $Devel::LeakTrack::Object::DESTROY_ORIGINAL{$original} ) {
+        goto
+         &{ $Devel::LeakTrack::Object::DESTROY_ORIGINAL{$original} };
+      }
+    }
+    else {
+      $original = $class;
+    }
+
+    # If we don't have the DESTROY_NEXT for this class, populate it
+    unless ( $Devel::LeakTrack::Object::DESTROY_NEXT{$original} ) {
+      Devel::LeakTrack::Object::make_next( $original );
+    }
+    my $super
+     = $Devel::LeakTrack::Object::DESTROY_NEXT{$original}->{$pkg};
+    if ( $super ) {
+      goto &{ $super . '::DESTROY' };
+    }
+    return;
+  };
 }
 
 sub make_next {

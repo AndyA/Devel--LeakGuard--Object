@@ -35,14 +35,14 @@ package main;
 
 {
   my $leaks = {};
-  my $foo1  = Foo->new( 'foo1' );
-  my $bar1  = Bar->new( 'bar1' );
+  my $foo1  = Foo->new( '1foo1' );
+  my $bar1  = Bar->new( '1bar1' );
 
   {
     my $state = Devel::LeakTrack::Object::State->new(
       onleak => sub { $leaks = shift } );
     {
-      my $foo2 = Foo->new( 'foo2' );
+      my $foo2 = Foo->new( '1foo2' );
     }
     my $keep = $state;
   }
@@ -52,14 +52,14 @@ package main;
 
 {
   my $leaks = {};
-  my $foo1  = Foo->new( 'foo1' );
-  my $bar1  = Bar->new( 'bar1' );
+  my $foo1  = Foo->new( '2foo1' );
+  my $bar1  = Bar->new( '2bar1' );
 
   {
     my $state = Devel::LeakTrack::Object::State->new(
       onleak => sub { $leaks = shift } );
     {
-      my $foo2 = Foo->new( 'foo2' );
+      my $foo2 = Foo->new( '2foo2' );
       $foo2->{me} = $foo2;
     }
     my $keep = $state;
