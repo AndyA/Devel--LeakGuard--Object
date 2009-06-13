@@ -64,35 +64,37 @@ will not be impacted.
 
 sub import {
   my $class  = shift;
-  my @import = ();
-  adj_magic( 0 );
-  while ( @_ ) {
-    my $function = shift;
-    unless ( $function eq 'GLOBAL_bless' ) {
-      push @import, $function;
-      next;
-    }
-    adj_magic( 1 ) unless is_magic();
-  }
-  return $class->SUPER::import( @import );
+  my @import = @_;
+
+  # We don't actually need to install our version of bless here but it'd
+  # be nice if any problems that it caused showed up sooner rather than
+  # later.
+  *CORE::GLOBAL::bless = plain_bless();
+
+  adj_magic( 1 ) if grep $_ eq 'GLOBAL_bless', @import;
+
+  return $class->SUPER::import( grep $_ ne 'GLOBAL_bless', @import );
 }
 
 {
   my $magic = 0;
 
   sub adj_magic {
-    my $adj = shift;
+    my $adj       = shift;
+    my $old_magic = $magic;
     $magic = 0 if ( $magic += $adj ) < 0;
-    switch_bless( $magic );
+    {
+      no warnings 'redefine';
+      if ( $old_magic > 0 && $magic == 0 ) {
+        *CORE::GLOBAL::bless = plain_bless();
+      }
+      elsif ( $old_magic == 0 && $magic > 0 ) {
+        *CORE::GLOBAL::bless = magic_bless();
+      }
+    }
   }
 
   sub is_magic { $magic }
-}
-
-sub switch_bless {
-  my $magic = shift;
-  no warnings 'redefine';
-  *CORE::GLOBAL::bless = $magic ? magic_bless() : plain_bless();
 }
 
 sub plain_bless {
@@ -120,46 +122,37 @@ sub state { return {%OBJECT_COUNT} }
 sub track {
   my $object = shift;
   my $class  = blessed $object;
+
   carp "Devel::LeakTrack::Object::track was passed a non-object"
    unless defined $class;
+
   my $address = refaddr $object;
   if ( $TRACKED{$address} ) {
-    if ( $class eq $TRACKED{$address} ) {
-      # Reblessing into the same class, ignore
-      return $OBJECT_COUNT{$class};
-    }
-    else {
-      # Reblessing into a different class
-      $OBJECT_COUNT{ $TRACKED{$address} }--;
-    }
+
+    # Reblessing into the same class, ignore
+    return $OBJECT_COUNT{$class}
+     if $class eq $TRACKED{$address};
+
+    # Reblessing into a different class
+    $OBJECT_COUNT{ $TRACKED{$address} }--;
   }
 
-  # Set or over-write the class name for the tracked object
   $TRACKED{$address} = $class;
 
-  # If needed, initialise the new class
   unless ( $DESTROY_STUBBED{$class} ) {
     no strict 'refs';
+    no warnings 'redefine';
+
     if ( exists ${ $class . '::' }{DESTROY}
       and *{ $class . '::DESTROY' }{CODE} ) {
-      # Stash the pre-existing DESTROY function
       $DESTROY_ORIGINAL{$class} = \&{ $class . '::DESTROY' };
     }
+
     $DESTROY_STUBBED{$class} = 1;
-    {
-      no strict 'refs';
-      no warnings 'redefine';
-      *{"${class}::DESTROY"} = mk_destroy( $class );
-    }
 
-    if ( $@ ) {
-      die "Failed to generate DESTROY method for $class: $@";
-    }
+    *{"${class}::DESTROY"} = mk_destroy( $class );
 
-    # Pre-emptively populate the DESTROY_NEXT map
-    unless ( $DESTROY_NEXT{$class} ) {
-      make_next( $class );
-    }
+    make_next( $class );
   }
 
   $OBJECT_COUNT{ $TRACKED{$address} }++;
@@ -170,56 +163,55 @@ sub mk_destroy {
 
   return sub {
     my $self    = $_[0];
-    my $class   = Scalar::Util::blessed( $self );
-    my $address = Scalar::Util::refaddr( $self );
-    unless ( defined $class ) {
-      die "Unexpected error: First param to DESTROY is no an object";
-    }
+    my $class   = blessed $self;
+    my $address = refaddr $self;
+
+    die "Unexpected error: First param to DESTROY is no an object"
+     unless defined $class;
 
     # Don't do anything unless tracking for the specific object is set
-    my $original = $Devel::LeakTrack::Object::TRACKED{$address};
+    my $original = $TRACKED{$address};
     if ( $original ) {
-      if ( $class ne $original ) {
-        warn
-         "Object class '$class' does not match original $Devel::LeakTrack::Object::TRACKED{$address}";
-      }
-      $Devel::LeakTrack::Object::OBJECT_COUNT{$original}--;
-      if ( $Devel::LeakTrack::Object::OBJECT_COUNT{$original} < 0 ) {
-        warn
-         "Object count for $Devel::LeakTrack::Object::TRACKED{$address} negative ($Devel::LeakTrack::Object::OBJECT_COUNT{$original})";
-      }
-      delete $Devel::LeakTrack::Object::TRACKED{$address};
 
-      if ( $Devel::LeakTrack::Object::DESTROY_ORIGINAL{$original} ) {
-        goto
-         &{ $Devel::LeakTrack::Object::DESTROY_ORIGINAL{$original} };
-      }
+      warn "Object class '$class' does",
+       " not match original $TRACKED{$address}"
+       if $class ne $original;
+
+      $OBJECT_COUNT{$original}--;
+
+      warn "Object count for $TRACKED{$address}",
+       " negative ($OBJECT_COUNT{$original})"
+       if $OBJECT_COUNT{$original} < 0;
+
+      delete $TRACKED{$address};
+
+      goto &{ $DESTROY_ORIGINAL{$original} }
+       if $DESTROY_ORIGINAL{$original};
     }
     else {
       $original = $class;
     }
 
     # If we don't have the DESTROY_NEXT for this class, populate it
-    unless ( $Devel::LeakTrack::Object::DESTROY_NEXT{$original} ) {
-      Devel::LeakTrack::Object::make_next( $original );
-    }
-    my $super
-     = $Devel::LeakTrack::Object::DESTROY_NEXT{$original}->{$pkg};
-    if ( $super ) {
-      goto &{ $super . '::DESTROY' };
-    }
+    make_next( $original );
+    my $super = $DESTROY_NEXT{$original}{$pkg};
+    goto &{"${super}::DESTROY"} if $super;
     return;
   };
 }
 
 sub make_next {
   my $class = shift;
+
   no strict 'refs';
+  return if $DESTROY_NEXT{$class};
 
   $DESTROY_NEXT{$class} = {};
+
   my @stack = ( $class );
   my %seen  = ( UNIVERSAL => 1 );
   my @queue = ();
+
   while ( my $c = shift @stack ) {
     next if $seen{$c}++;
 
@@ -229,9 +221,8 @@ sub make_next {
      : ( exists ${"${c}::"}{DESTROY} and *{"${c}::DESTROY"}{CODE} );
 
     if ( $has_destroy ) {
-      while ( @queue ) {
-        $DESTROY_NEXT{$class}->{ shift( @queue ) } = $c;
-      }
+      $DESTROY_NEXT{$class}{$_} = $c for @queue;
+      @queue = ();
     }
     else {
       push @queue, $c;
@@ -240,9 +231,7 @@ sub make_next {
     unshift @stack, @{"${c}::ISA"};
   }
 
-  while ( @queue ) {
-    $DESTROY_NEXT{$class}->{ shift @queue } = '';
-  }
+  $DESTROY_NEXT{$class}{$_} = '' for @queue;
 
   return 1;
 }
