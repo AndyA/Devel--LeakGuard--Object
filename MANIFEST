@@ -2,14 +2,17 @@ Build.PL
 Changes
 inc/MyBuilder.pm
 lib/Devel/LeakTrack/Object.pm
+lib/Devel/LeakTrack/Object/State.pm
 LICENSE
 MANIFEST
 META.yml
 README
+scope.t
 t/auto.t
 t/basic.t
 t/inherit.t
 t/rebless.t
+t/scope.t
 xt/author/manifest.t
 xt/author/pod-coverage.t
 xt/author/pod.t

@@ -13,7 +13,6 @@ Devel::LeakTrack::Object::State - Scoped object leak checking
 
 sub new {
   my ( $class, %options ) = @_;
-  print "new $class\n";
   Devel::LeakTrack::Object::adj_magic( 1 );
   return bless { %options, state => Devel::LeakTrack::Object::state() },
    $class;
@@ -22,7 +21,6 @@ sub new {
 sub DESTROY {
   my $self = shift;
   my ( $pkg, $file, $line ) = caller;
-  print "destroy ", ref $self, " at $file, $line\n";
 
   Devel::LeakTrack::Object::adj_magic( -1 );
   my $state  = Devel::LeakTrack::Object::state();

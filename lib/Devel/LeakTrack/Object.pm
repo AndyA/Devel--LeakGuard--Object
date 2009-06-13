@@ -122,7 +122,6 @@ sub track {
   carp "Devel::LeakTrack::Object::track was passed a non-object"
    unless defined $class;
   my $address = refaddr $object;
-  print "# Tracking $class($address)\n";
   if ( $TRACKED{$address} ) {
     if ( $class eq $TRACKED{$address} ) {
       # Reblessing into the same class, ignore
