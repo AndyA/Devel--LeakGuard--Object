@@ -142,10 +142,11 @@ will not be impacted.
 =cut
 
 sub leakguard(&@) {
-  my $block = shift;
-  my $state = Devel::LeakGuard::Object::State->new( @_ );
-  $block->();
-  return $state;
+  my $block    = shift;
+  my $state    = Devel::LeakGuard::Object::State->new( @_ );
+  my $rc       = $block->();
+  my ( undef ) = ( $state );
+  return $rc;
 }
 
 =head2 C<< state >>
