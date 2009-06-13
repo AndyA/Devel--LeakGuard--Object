@@ -14,6 +14,7 @@ use Devel::LeakGuard::Object::State;
 use base qw( Exporter );
 
 our @EXPORT_OK = qw( adj_magic track state status leakguard );
+our %OPTIONS = ( at_end => 0 );
 
 our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
   %TRACKED );
@@ -86,7 +87,8 @@ will not be impacted.
 
   sub import {
     my $class  = shift;
-    my @import = @_;
+    my @args   = @_;
+    my @import = ();
 
     unless ( *CORE::GLOBAL::bless eq $plain_bless ) {
       # We don't actually need to install our version of bless here but
@@ -99,10 +101,19 @@ will not be impacted.
       *CORE::GLOBAL::bless = $plain_bless;
     }
 
-    adj_magic( 1 ) if grep $_ eq 'GLOBAL_bless', @import;
+    for my $a ( @args ) {
+      if ( 'GLOBAL_bless' eq $a ) {
+        adj_magic( 1 );
+      }
+      elsif ( $a =~ /^:(.+)$/ ) {
+        $OPTIONS{$1}++;
+      }
+      else {
+        push @import, $a;
+      }
+    }
 
-    return __PACKAGE__->export_to_level( 1, $class,
-      grep $_ ne 'GLOBAL_bless', @import );
+    return __PACKAGE__->export_to_level( 1, $class, @import );
   }
 
   sub adj_magic {
@@ -265,7 +276,7 @@ sub status {
   }
 }
 
-END { status() }
+END { status() if $OPTIONS{at_end} }
 
 1;
 
