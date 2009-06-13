@@ -67,10 +67,16 @@ sub import {
   my $class  = shift;
   my @import = @_;
 
-  # We don't actually need to install our version of bless here but it'd
-  # be nice if any problems that it caused showed up sooner rather than
-  # later.
-  *CORE::GLOBAL::bless = _plain_bless();
+  {
+    # We don't actually need to install our version of bless here but
+    # it'd be nice if any problems that it caused showed up sooner
+    # rather than later.
+    local $SIG{__WARN__} = sub {
+      warn "It looks as if something else is already "
+       . "overloading bless; there may be troubles ahead";
+    };
+    *CORE::GLOBAL::bless = _plain_bless();
+  }
 
   adj_magic( 1 ) if grep $_ eq 'GLOBAL_bless', @import;
 
