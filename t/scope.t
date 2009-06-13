@@ -17,14 +17,7 @@ use warnings;
 
 sub new {
   my ( $class, $name ) = @_;
-  my ( $pkg, $file, $line ) = caller;
   return bless { name => $name }, $class;
-}
-
-sub DESTROY {
-  my $self  = shift;
-  my $class = ref $self;
-  my ( $pkg, $file, $line ) = caller;
 }
 
 package Bar;
@@ -40,7 +33,7 @@ package main;
 
   {
     my $state = Devel::LeakGuard::Object::State->new(
-      onleak => sub { $leaks = shift } );
+      on_leak => sub { $leaks = shift } );
     {
       my $foo2 = Foo->new( '1foo2' );
     }
@@ -57,7 +50,7 @@ package main;
 
   {
     my $state = Devel::LeakGuard::Object::State->new(
-      onleak => sub { $leaks = shift } );
+      on_leak => sub { $leaks = shift } );
     {
       my $foo2 = Foo->new( '2foo2' );
       $foo2->{me} = $foo2;

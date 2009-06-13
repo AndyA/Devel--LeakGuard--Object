@@ -15,6 +15,7 @@ my $builder = MyBuilder->new(
   dist_version_from    => 'lib/Devel/LeakGuard/Object.pm',
   recursive_test_files => 1,
   requires             => {
+    'List::Util'        => '1.19',
     'Scalar::Util'      => '1.19',
     'Test::Differences' => 0,
     'Test::More'        => '0.42',
