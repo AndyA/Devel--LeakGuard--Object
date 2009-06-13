@@ -63,57 +63,16 @@ will not be impacted.
 
 =cut
 
-sub import {
-  my $class  = shift;
-  my @import = @_;
-
-  {
-    # We don't actually need to install our version of bless here but
-    # it'd be nice if any problems that it caused showed up sooner
-    # rather than later.
-    local $SIG{__WARN__} = sub {
-      warn "It looks as if something else is already "
-       . "overloading bless; there may be troubles ahead";
-    };
-    *CORE::GLOBAL::bless = _plain_bless();
-  }
-
-  adj_magic( 1 ) if grep $_ eq 'GLOBAL_bless', @import;
-
-  return $class->SUPER::import( grep $_ ne 'GLOBAL_bless', @import );
-}
-
 {
   my $magic = 0;
 
-  sub adj_magic {
-    my $adj       = shift;
-    my $old_magic = $magic;
-    $magic = 0 if ( $magic += $adj ) < 0;
-    {
-      no warnings 'redefine';
-      if ( $old_magic > 0 && $magic == 0 ) {
-        *CORE::GLOBAL::bless = _plain_bless();
-      }
-      elsif ( $old_magic == 0 && $magic > 0 ) {
-        *CORE::GLOBAL::bless = _magic_bless();
-      }
-    }
-  }
-
-  sub is_magic { $magic }
-}
-
-sub _plain_bless {
-  sub {
+  my $plain_bless = sub {
     my $ref = shift;
     my $class = @_ ? shift : scalar caller;
     return CORE::bless( $ref, $class );
   };
-}
 
-sub _magic_bless {
-  sub {
+  my $magic_bless = sub {
     my $ref    = shift;
     my $class  = @_ ? shift : scalar caller;
     my $object = CORE::bless( $ref, $class );
@@ -122,6 +81,41 @@ sub _magic_bless {
     }
     return $object;
   };
+
+  sub import {
+    my $class  = shift;
+    my @import = @_;
+
+    {
+      # We don't actually need to install our version of bless here but
+      # it'd be nice if any problems that it caused showed up sooner
+      # rather than later.
+      local $SIG{__WARN__} = sub {
+        warn "It looks as if something else is already "
+         . "overloading bless; there may be troubles ahead";
+      };
+      *CORE::GLOBAL::bless = $plain_bless;
+    }
+
+    adj_magic( 1 ) if grep $_ eq 'GLOBAL_bless', @import;
+
+    return $class->SUPER::import( grep $_ ne 'GLOBAL_bless', @import );
+  }
+
+  sub adj_magic {
+    my $adj       = shift;
+    my $old_magic = $magic;
+    $magic = 0 if ( $magic += $adj ) < 0;
+    {
+      no warnings 'redefine';
+      if ( $old_magic > 0 && $magic == 0 ) {
+        *CORE::GLOBAL::bless = $plain_bless;
+      }
+      elsif ( $old_magic == 0 && $magic > 0 ) {
+        *CORE::GLOBAL::bless = $magic_bless;
+      }
+    }
+  }
 }
 
 sub state { return {%OBJECT_COUNT} }
