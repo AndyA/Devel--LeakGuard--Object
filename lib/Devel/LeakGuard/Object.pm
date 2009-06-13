@@ -50,7 +50,7 @@ Object tracking can be enabled on a per object basis. Any objects thus
 tracked are remembered until DESTROYed; details of any objects left are
 printed out to stderr at END-time.
 
-  use Devel::LeakGuard::Object qw(GLOBAL_bless);
+  use Devel::LeakGuard::Object qw( GLOBAL_bless );
 
 This form overloads B<bless> to track construction and destruction of
 all objects. As an alternative, by importing bless, you can just track
@@ -121,12 +121,26 @@ will not be impacted.
   }
 }
 
+=head2 C<< leakguard >>
+
+=cut
+
 sub leakguard(&@) {
   my $block = shift;
-
+  my $state = Devel::LeakGuard::Object::State->new( @_ );
+  $block->();
+  return $state;
 }
 
+=head2 C<< state >>
+
+=cut
+
 sub state { return {%OBJECT_COUNT} }
+
+=head2 C<< track >>
+
+=cut
 
 sub track {
   my $object = shift;

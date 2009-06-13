@@ -8,7 +8,7 @@ use Test::Differences;
 use Test::More tests => 2;
 
 use Devel::LeakGuard::Object::State;
-use Devel::LeakGuard::Object;
+use Devel::LeakGuard::Object qw( leakguard );
 
 package Foo;
 
@@ -38,14 +38,10 @@ package main;
   my $foo1  = Foo->new( '1foo1' );
   my $bar1  = Bar->new( '1bar1' );
 
-  {
-    my $state = Devel::LeakGuard::Object::State->new(
-      onleak => sub { $leaks = shift } );
-    {
-      my $foo2 = Foo->new( '1foo2' );
-    }
-    my $keep = $state;
+  leakguard {
+    my $foo2 = Foo->new( '1foo2' );
   }
+  onleak => sub { $leaks = shift };
 
   eq_or_diff $leaks, {}, 'no leaks';
 }
@@ -55,15 +51,11 @@ package main;
   my $foo1  = Foo->new( '2foo1' );
   my $bar1  = Bar->new( '2bar1' );
 
-  {
-    my $state = Devel::LeakGuard::Object::State->new(
-      onleak => sub { $leaks = shift } );
-    {
-      my $foo2 = Foo->new( '2foo2' );
-      $foo2->{me} = $foo2;
-    }
-    my $keep = $state;
+  leakguard {
+    my $foo2 = Foo->new( '2foo2' );
+    $foo2->{me} = $foo2;
   }
+  onleak => sub { $leaks = shift };
 
   eq_or_diff $leaks, { Foo => [ 0, 1 ] }, 'leaks';
 }
