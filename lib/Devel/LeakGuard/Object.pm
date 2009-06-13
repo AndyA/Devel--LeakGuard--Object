@@ -10,7 +10,7 @@ use Data::Dumper;
 use Scalar::Util qw( blessed refaddr );
 
 use base qw( Exporter );
-our @EXPORT_OK = qw( track bless status );
+our @EXPORT_OK = qw( track status );
 
 our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
   %TRACKED );
@@ -69,7 +69,7 @@ sub import {
   # We don't actually need to install our version of bless here but it'd
   # be nice if any problems that it caused showed up sooner rather than
   # later.
-  *CORE::GLOBAL::bless = plain_bless();
+  *CORE::GLOBAL::bless = _plain_bless();
 
   adj_magic( 1 ) if grep $_ eq 'GLOBAL_bless', @import;
 
@@ -86,10 +86,10 @@ sub import {
     {
       no warnings 'redefine';
       if ( $old_magic > 0 && $magic == 0 ) {
-        *CORE::GLOBAL::bless = plain_bless();
+        *CORE::GLOBAL::bless = _plain_bless();
       }
       elsif ( $old_magic == 0 && $magic > 0 ) {
-        *CORE::GLOBAL::bless = magic_bless();
+        *CORE::GLOBAL::bless = _magic_bless();
       }
     }
   }
@@ -97,7 +97,7 @@ sub import {
   sub is_magic { $magic }
 }
 
-sub plain_bless {
+sub _plain_bless {
   sub {
     my $reference = shift;
     my $class = @_ ? shift : scalar caller;
@@ -105,7 +105,7 @@ sub plain_bless {
   };
 }
 
-sub magic_bless {
+sub _magic_bless {
   sub {
     my $reference = shift;
     my $class     = @_ ? shift : scalar caller;
@@ -150,15 +150,15 @@ sub track {
 
     $DESTROY_STUBBED{$class} = 1;
 
-    *{"${class}::DESTROY"} = mk_destroy( $class );
+    *{"${class}::DESTROY"} = _mk_destroy( $class );
 
-    make_next( $class );
+    _mk_next( $class );
   }
 
   $OBJECT_COUNT{ $TRACKED{$address} }++;
 }
 
-sub mk_destroy {
+sub _mk_destroy {
   my $pkg = shift;
 
   return sub {
@@ -193,14 +193,14 @@ sub mk_destroy {
     }
 
     # If we don't have the DESTROY_NEXT for this class, populate it
-    make_next( $original );
+    _mk_next( $original );
     my $super = $DESTROY_NEXT{$original}{$pkg};
     goto &{"${super}::DESTROY"} if $super;
     return;
   };
 }
 
-sub make_next {
+sub _mk_next {
   my $class = shift;
 
   no strict 'refs';
