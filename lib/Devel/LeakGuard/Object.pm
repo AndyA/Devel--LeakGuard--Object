@@ -10,6 +10,7 @@ use Data::Dumper;
 use Scalar::Util qw( blessed refaddr );
 
 use base qw( Exporter );
+
 our @EXPORT_OK = qw( track status );
 
 our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
@@ -99,17 +100,17 @@ sub import {
 
 sub _plain_bless {
   sub {
-    my $reference = shift;
+    my $ref = shift;
     my $class = @_ ? shift : scalar caller;
-    return CORE::bless( $reference, $class );
+    return CORE::bless( $ref, $class );
   };
 }
 
 sub _magic_bless {
   sub {
-    my $reference = shift;
-    my $class     = @_ ? shift : scalar caller;
-    my $object    = CORE::bless( $reference, $class );
+    my $ref    = shift;
+    my $class  = @_ ? shift : scalar caller;
+    my $object = CORE::bless( $ref, $class );
     unless ( $class->isa( 'Devel::LeakGuard::Object::State' ) ) {
       Devel::LeakGuard::Object::track( $object );
     }
@@ -232,8 +233,6 @@ sub _mk_next {
   }
 
   $DESTROY_NEXT{$class}{$_} = '' for @queue;
-
-  return 1;
 }
 
 sub status {
@@ -244,9 +243,7 @@ sub status {
   }
 }
 
-END {
-  status();
-}
+END { status() }
 
 1;
 
