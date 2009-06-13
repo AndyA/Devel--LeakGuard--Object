@@ -10,7 +10,7 @@ license: perl
 meta-spec: 
   url: http://module-build.sourceforge.net/META-spec-v1.3.html
   version: 1.3
-name: Devel-LeakTrack-Object
+name: Devel-LeakGuard-Object
 no_index: 
   directory: 
     - inc

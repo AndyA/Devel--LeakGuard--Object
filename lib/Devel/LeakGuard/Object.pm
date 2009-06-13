@@ -1,4 +1,4 @@
-package Devel::LeakTrack::Object;
+package Devel::LeakGuard::Object;
 
 use 5.008;
 
@@ -17,11 +17,11 @@ our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
 
 =head1 NAME
 
-Devel::LeakTrack::Object - Scoped checks for object leaks
+Devel::LeakGuard::Object - Scoped checks for object leaks
 
 =head1 VERSION
 
-This document describes Devel::LeakTrack::Object version 0.01
+This document describes Devel::LeakGuard::Object version 0.01
 
 =cut
 
@@ -30,12 +30,12 @@ our $VERSION = '0.01';
 =head1 SYNOPSIS
 
   # Track a single object
-  use Devel::LeakTrack::Object;
+  use Devel::LeakGuard::Object;
   my $obj = Foo::Bar->new;
-  Devel::LeakTrack::Object::track($obj);
+  Devel::LeakGuard::Object::track($obj);
   
   # Track every object
-  use Devel::LeakTrack::Object qw{ GLOBAL_bless };
+  use Devel::LeakGuard::Object qw{ GLOBAL_bless };
 
 =head1 DESCRIPTION
 
@@ -47,7 +47,7 @@ Object tracking can be enabled on a per object basis. Any objects thus
 tracked are remembered until DESTROYed; details of any objects left are
 printed out to stderr at END-time.
 
-  use Devel::LeakTrack::Object qw(GLOBAL_bless);
+  use Devel::LeakGuard::Object qw(GLOBAL_bless);
 
 This form overloads B<bless> to track construction and destruction of
 all objects. As an alternative, by importing bless, you can just track
@@ -55,7 +55,7 @@ the objects of the caller code that is doing the use.
 
 If you use GLOBAL_bless to overload the bless function, please note that
 it will ONLY apply to bless for modules loaded AFTER
-Devel::LeakTrack::Object has enabled the hook.
+Devel::LeakGuard::Object has enabled the hook.
 
 Any modules already loaded will have already bound to CORE::bless and
 will not be impacted.
@@ -110,8 +110,8 @@ sub magic_bless {
     my $reference = shift;
     my $class     = @_ ? shift : scalar caller;
     my $object    = CORE::bless( $reference, $class );
-    unless ( $class->isa( 'Devel::LeakTrack::Object::State' ) ) {
-      Devel::LeakTrack::Object::track( $object );
+    unless ( $class->isa( 'Devel::LeakGuard::Object::State' ) ) {
+      Devel::LeakGuard::Object::track( $object );
     }
     return $object;
   };
@@ -123,7 +123,7 @@ sub track {
   my $object = shift;
   my $class  = blessed $object;
 
-  carp "Devel::LeakTrack::Object::track was passed a non-object"
+  carp "Devel::LeakGuard::Object::track was passed a non-object"
    unless defined $class;
 
   my $address = refaddr $object;

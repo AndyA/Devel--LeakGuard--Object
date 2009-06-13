@@ -7,8 +7,8 @@ use Data::Dumper;
 use Test::Differences;
 use Test::More tests => 2;
 
-use Devel::LeakTrack::Object::State;
-use Devel::LeakTrack::Object qw( GLOBAL_bless );
+use Devel::LeakGuard::Object::State;
+use Devel::LeakGuard::Object qw( GLOBAL_bless );
 
 package Foo;
 
@@ -39,7 +39,7 @@ package main;
   my $bar1  = Bar->new( '1bar1' );
 
   {
-    my $state = Devel::LeakTrack::Object::State->new(
+    my $state = Devel::LeakGuard::Object::State->new(
       onleak => sub { $leaks = shift } );
     {
       my $foo2 = Foo->new( '1foo2' );
@@ -56,7 +56,7 @@ package main;
   my $bar1  = Bar->new( '2bar1' );
 
   {
-    my $state = Devel::LeakTrack::Object::State->new(
+    my $state = Devel::LeakGuard::Object::State->new(
       onleak => sub { $leaks = shift } );
     {
       my $foo2 = Foo->new( '2foo2' );

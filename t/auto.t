@@ -4,7 +4,7 @@
 
 use Test::More tests => 6;
 
-use Devel::LeakTrack::Object qw(GLOBAL_bless);
+use Devel::LeakGuard::Object qw(GLOBAL_bless);
 
 my $foo = bless {}, 'Foo::Bar';
 
@@ -12,27 +12,27 @@ my $foo = bless {}, 'Foo::Bar';
 isa_ok( $foo, 'Foo::Bar', "Before the tests" );
 
 #02
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{'Foo::Bar'},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Bar'},
   1, '# objects ($foo)' );
 
 my $buzz = bless [], 'Foo::Bar';
 
 #03
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{'Foo::Bar'},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Bar'},
   2, '# objects ($foo,$buzz)' );
 
 undef $foo;
 
 #04
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{'Foo::Bar'},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Bar'},
   1, '# objects ($buzz)' );
 
 undef $buzz;
 
 #05
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{'Foo::Bar'},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Bar'},
   0, 'no objects left' );
 
 #06
-is( scalar( keys %Devel::LeakTrack::Object::TRACKED ),
+is( scalar( keys %Devel::LeakGuard::Object::TRACKED ),
   0, 'Nothing still tracked' );

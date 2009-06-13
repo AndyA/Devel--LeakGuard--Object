@@ -1,13 +1,12 @@
 Build.PL
 Changes
 inc/MyBuilder.pm
-lib/Devel/LeakTrack/Object.pm
-lib/Devel/LeakTrack/Object/State.pm
+lib/Devel/LeakGuard/Object.pm
+lib/Devel/LeakGuard/Object/State.pm
 LICENSE
 MANIFEST
 META.yml
 README
-scope.t
 t/auto.t
 t/basic.t
 t/inherit.t

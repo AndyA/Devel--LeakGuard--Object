@@ -1,20 +1,20 @@
-package Devel::LeakTrack::Object::State;
+package Devel::LeakGuard::Object::State;
 
 use strict;
 use warnings;
 
-use Devel::LeakTrack::Object;
+use Devel::LeakGuard::Object;
 
 =head1 NAME
 
-Devel::LeakTrack::Object::State - Scoped object leak checking
+Devel::LeakGuard::Object::State - Scoped object leak checking
 
 =cut
 
 sub new {
   my ( $class, %options ) = @_;
-  Devel::LeakTrack::Object::adj_magic( 1 );
-  return bless { %options, state => Devel::LeakTrack::Object::state() },
+  Devel::LeakGuard::Object::adj_magic( 1 );
+  return bless { %options, state => Devel::LeakGuard::Object::state() },
    $class;
 }
 
@@ -22,8 +22,8 @@ sub DESTROY {
   my $self = shift;
   my ( $pkg, $file, $line ) = caller;
 
-  Devel::LeakTrack::Object::adj_magic( -1 );
-  my $state  = Devel::LeakTrack::Object::state();
+  Devel::LeakGuard::Object::adj_magic( -1 );
+  my $state  = Devel::LeakGuard::Object::state();
   my %seen   = ();
   my %report = ();
 

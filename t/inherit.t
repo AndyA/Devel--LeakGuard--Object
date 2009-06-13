@@ -44,7 +44,7 @@ use strict;
 
 #01
 BEGIN {
-  use_ok( 'Devel::LeakTrack::Object' );
+  use_ok( 'Devel::LeakGuard::Object' );
 }
 
 my $foo = C->new( 'foo' );
@@ -63,18 +63,18 @@ is( $E::msg, 'E::DESTROY called for foo', 'Inherited DESTROY method' );
 $foo = C->new( 'foo2' );
 my $bar = D->new( 'bar' );
 
-Devel::LeakTrack::Object::track( $bar );
+Devel::LeakGuard::Object::track( $bar );
 
 #05
 is( $bar->{constructor}, 'E', 'Inherits new from E' );
 
 #06
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{D}, 1, 'D object count' );
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{D}, 1, 'D object count' );
 
 undef $bar;
 
 #07
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{D},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{D},
   0, 'D object count decremented' );
 
 #08
@@ -96,19 +96,19 @@ is(
 $foo = C->new( 'foo3' );
 $bar = Blah->new( 'bar' );
 
-Devel::LeakTrack::Object::track( $bar );
+Devel::LeakGuard::Object::track( $bar );
 
 #10
 is( $bar->{constructor}, 'A', 'Inherits new from A' );
 
 #11
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{Blah},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{Blah},
   1, 'Blah object count' );
 
 undef $bar;
 
 #12
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{Blah},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{Blah},
   0, 'Blah object count decremented' );
 
 undef $foo;
@@ -123,18 +123,18 @@ is(
 $foo = C->new( 'foo4' );
 $bar = C->new( 'bar' );
 
-Devel::LeakTrack::Object::track( $bar );
+Devel::LeakGuard::Object::track( $bar );
 
 #14
 is( $bar->{constructor}, 'A', 'Inherits new from A' );
 
 #15
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{C}, 1, 'C object count' );
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{C}, 1, 'C object count' );
 
 undef $bar;
 
 #16
-is( $Devel::LeakTrack::Object::OBJECT_COUNT{C},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{C},
   0, 'C object count decremented' );
 
 #17
@@ -144,7 +144,7 @@ is(
   'Inherited DESTROY method C::bar'
 );
 
-Devel::LeakTrack::Object::track( $foo );
+Devel::LeakGuard::Object::track( $foo );
 
 undef $foo;
 
