@@ -212,7 +212,7 @@ sub make_next {
   my %seen  = ( UNIVERSAL => 1 );
   my @queue = ();
 
-  while ( my $c = shift @stack ) {
+  while ( my $c = pop @stack ) {
     next if $seen{$c}++;
 
     my $has_destroy
@@ -228,7 +228,7 @@ sub make_next {
       push @queue, $c;
     }
 
-    unshift @stack, @{"${c}::ISA"};
+    push @stack, reverse @{"${c}::ISA"};
   }
 
   $DESTROY_NEXT{$class}{$_} = '' for @queue;
