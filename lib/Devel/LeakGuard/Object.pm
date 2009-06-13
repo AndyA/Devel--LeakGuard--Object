@@ -7,7 +7,7 @@ use warnings;
 
 use Carp;
 use Data::Dumper;
-use Scalar::Util qw( blessed refaddr );
+use Scalar::Util qw( blessed refaddr weaken );
 
 use Devel::LeakGuard::Object::State;
 
@@ -141,10 +141,14 @@ will not be impacted.
 
 =cut
 
+use Devel::Peek;
+
 sub leakguard(&@) {
   my $block = shift;
   my $state = Devel::LeakGuard::Object::State->new( @_ );
-  return $block->();
+  $block->();
+  $state->done();
+  return;
 }
 
 =head2 C<< state >>

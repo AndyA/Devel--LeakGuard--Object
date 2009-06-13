@@ -25,7 +25,7 @@ sub _caller() {
 
 sub new {
   my $class = shift;
-  my ( $pkg, $file, $line ) = _caller;
+  my ( $pkg, $file, $line ) = caller;
   croak "expected a number of key => value options" if @_ % 1;
   adj_magic( 1 );
   my %opt = @_;
@@ -46,7 +46,7 @@ sub new {
 
   croak "invalid option(s): ", sort keys %opt if keys %opt;
 
-  print "new $class at $file, $line\n";
+  #  print "new $class at $file, $line\n";
 
   return $self;
 }
@@ -82,8 +82,8 @@ sub _fmt_report {
 sub done {
   my $self = shift;
   local $@;
-  my ( $pkg, $file, $line ) = _caller;
-  print "done ", ref $self, " at $file, $line\n";
+  #  my ( $pkg, $file, $line ) = caller;
+  #  print "done ", ref $self, " at $file, $line\n";
   return if $self->{done}++;
 
   adj_magic( -1 );
@@ -103,31 +103,7 @@ sub done {
   }
 }
 
-sub DESTROY {
-  my $self = shift;
-  local $@;
-  my ( $pkg, $file, $line ) = _caller;
-  print "DESTROY ", ref $self, " at $file, $line\n";
-  return if $self->{done}++;
-
-  adj_magic( -1 );
-  my $state  = state();
-  my %seen   = ();
-  my %report = ();
-
-  for my $class ( sort keys %{ $self->{state} }, %$state ) {
-    next if $seen{$class}++;
-    my $before = $self->{state}{$class} || 0;
-    my $after  = $state->{$class}       || 0;
-    $report{$class} = [ $before, $after ] if $before != $after;
-  }
-
-  if ( keys %report ) {
-    $self->{on_leak}( \%report ) if $self->{on_leak};
-  }
-}
-
-#sub DESTROY { shift->done }
+sub DESTROY { shift->done }
 
 1;
 

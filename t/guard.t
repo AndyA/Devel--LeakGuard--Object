@@ -5,7 +5,7 @@ use warnings;
 
 use Data::Dumper;
 use Test::Differences;
-use Test::More tests => 7;
+use Test::More tests => 6;
 
 use Devel::LeakGuard::Object::State;
 use Devel::LeakGuard::Object qw( leakguard );
@@ -17,18 +17,17 @@ use warnings;
 
 sub new {
   my ( $class, $name ) = @_;
-  my ( $pkg, $file, $line ) = caller;
-  print "new $class($name) at $file, $line\n";
+  #  my ( $pkg, $file, $line ) = caller;
+  #  print "new $class($name) at $file, $line\n";
   return bless { name => $name }, $class;
 }
 
-sub nop { }
-
-sub DESTROY {
-  my $self = shift;
-  my ( $pkg, $file, $line ) = caller;
-  print "DESTROY ", ref $self, "($self->{name}) at $file, $line\n";
-}
+#sub DESTROY {
+#  my $self = shift;
+#  my ( $pkg, $file, $line ) = caller;
+#  print "DESTROY ", ref $self, "($self->{name}) at $file, $line\n";
+#  $self->{name} .= ' [destroyed]';
+#}
 
 package Bar;
 
@@ -36,10 +35,9 @@ our @ISA = qw( Foo );
 
 package main;
 
-if ( 0 ) {
+{
   eval 'leakguard {}';
   ok !$@, 'no error from bare leakguard' or diag $@;
-  is leakguard { 'foo' }, 'foo', 'return value from leakguard';
 }
 
 {
@@ -54,7 +52,6 @@ if ( 0 ) {
 
   eq_or_diff $leaks, {}, 'no leaks';
 }
-__END__
 
 {
   my $leaks = {};
@@ -106,11 +103,13 @@ __END__
 {
   my @w = ();
   local $SIG{__DIE__} = sub { push @w, @_ };
-  leakguard {
-    my $foo1 = Foo->new( '5foo1' );
-    $foo1->{me} = $foo1;
-  }
-  on_leak => 'die';
+  eval {
+    leakguard {
+      my $foo1 = Foo->new( '5foo1' );
+      $foo1->{me} = $foo1;
+    }
+    on_leak => 'die';
+  };
   s/line \d+/line #/g for @w;
   eq_or_diff [@w],
    [   "Object leaks found:\n"
