@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 use Carp qw( croak carp );
-use Devel::LeakGuard::Object qw( adj_magic state );
+use Devel::LeakGuard::Object qw( _adj_magic state );
 use List::Util qw( max );
 
 =head1 NAME
@@ -62,7 +62,7 @@ sub new {
   return bless {}, 'Devel::LeakGuard::Object::State::Nop'
    if $on_leak eq 'ignore';
 
-  adj_magic( 1 );
+  _adj_magic( 1 );
 
   my $self = bless { state => state() }, $class;
 
@@ -122,7 +122,6 @@ sub _make_matcher {
   my @m = ();
   for my $elt ( 'ARRAY' eq ref $filter ? @$filter : $filter ) {
     unless ( ref $elt ) {
-      $DB::single = 1 if $elt =~ /\*/;
       my $pat = join '',
        map { '*' eq $_ ? '.*?' : quotemeta $_ } split //, $elt;
       $elt = qr{^$pat$};
@@ -171,7 +170,7 @@ sub done {
   #  print "done ", ref $self, " at $file, $line\n";
   return if $self->{done}++;
 
-  adj_magic( -1 );
+  _adj_magic( -1 );
   my $state  = state();
   my %seen   = ();
   my %report = ();

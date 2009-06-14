@@ -13,7 +13,7 @@ use Devel::LeakGuard::Object::State;
 
 use base qw( Exporter );
 
-our @EXPORT_OK = qw( adj_magic track state status leakguard );
+our @EXPORT_OK = qw( _adj_magic track state status leakguard );
 
 our %OPTIONS = (
   at_end => 0,
@@ -194,7 +194,7 @@ C<Devel::LeakGuard::Object> slows that down to around 2 μS.
 
     for my $a ( @args ) {
       if ( 'GLOBAL_bless' eq $a ) {
-        adj_magic( 1 );
+        _adj_magic( 1 );
       }
       elsif ( $a =~ /^:(.+)$/ ) {
         croak "Bad option: $1" unless exists $OPTIONS{$1};
@@ -208,7 +208,7 @@ C<Devel::LeakGuard::Object> slows that down to around 2 μS.
     return __PACKAGE__->export_to_level( 1, $class, @import );
   }
 
-  sub adj_magic {
+  sub _adj_magic {
     my $adj       = shift;
     my $old_magic = $magic;
     $magic = 0 if ( $magic += $adj ) < 0;
