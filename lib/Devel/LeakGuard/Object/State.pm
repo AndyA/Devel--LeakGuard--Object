@@ -17,24 +17,28 @@ sub new {
   my $class = shift;
   my ( $pkg, $file, $line ) = caller;
   croak "expected a number of key => value options" if @_ % 1;
-  adj_magic( 1 );
+
   my %opt = @_;
+  my $on_leak = delete $opt{on_leak} || 'warn';
+
+  return bless {}, 'Devel::LeakGuard::Object::State::Nop'
+   if $on_leak eq 'ignore';
+
+  adj_magic( 1 );
+
   my $self = bless { state => state() }, $class;
 
-  {
-    my $on_leak = delete $opt{on_leak} || 'warn';
-    $self->{on_leak} = $on_leak eq 'die'
-     ? sub {
-      $class->_with_report( shift, sub { croak @_ } );
-     }
-     : $on_leak eq 'warn' ? sub {
-      $class->_with_report( shift, sub { carp @_ } );
-     }
-     : $on_leak;
+  $self->{on_leak} = $on_leak eq 'die'
+   ? sub {
+    $class->_with_report( shift, sub { croak @_ } );
+   }
+   : $on_leak eq 'warn' ? sub {
+    $class->_with_report( shift, sub { carp @_ } );
+   }
+   : $on_leak;
 
-    croak "on_leak must be a coderef, 'warn' or 'die'"
-     unless 'CODE' eq ref $self->{on_leak};
-  }
+  croak "on_leak must be a coderef, 'warn' or 'die'"
+   unless 'CODE' eq ref $self->{on_leak};
 
   $self->{$_} = delete $opt{$_} for qw( expect only exclude );
 
@@ -44,6 +48,8 @@ sub new {
 
   return $self;
 }
+
+sub Devel::LeakGuard::Object::State::Nop::done { }
 
 sub _with_report {
   my ( $class, $rep, $cb ) = @_;
@@ -80,8 +86,9 @@ sub _make_matcher {
     unless ( ref $elt ) {
       my $pat = join '',
        map { '*' eq $_ ? '.*?' : quotemeta $_ } split //, $elt;
-      $elt = qr{^$pat$}o;
+      $elt = qr{^$pat$};
     }
+
     if ( 'Regexp' eq ref $elt ) {
       push @m, sub { $_ =~ $elt };
     }
