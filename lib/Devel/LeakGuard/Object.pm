@@ -523,7 +523,7 @@ __END__
 
 =head1 DEPENDENCIES
 
-None.
+L<List::Util>, L<Scalar::Util>, L<Test::Differences>, L<Test::More>
 
 =head1 SEE ALSO
 
