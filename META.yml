@@ -1,7 +1,6 @@
 ---
 name: Devel-LeakGuard-Object
 version: 0.02
-
 author:
   - 'Andy Armstrong <andy@hexten.net>'
 abstract: Scoped checks for object leaks
@@ -18,10 +17,10 @@ requires:
 provides:
   Devel::LeakGuard::Object:
     file: lib/Devel/LeakGuard/Object.pm
-    version: 0.01
+    version: 0.02
   Devel::LeakGuard::Object::State:
     file: lib/Devel/LeakGuard/Object/State.pm
-    version: 0.01
+    version: 0.02
 generated_by: Module::Build version 0.33
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html

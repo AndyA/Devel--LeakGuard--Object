@@ -2,3 +2,6 @@ Revision history for Perl module Devel::LeakGuard::Object
 
 0.01  2009-06-14
       - Initial version.
+
+0.02  2009-06-14
+      - Fix MyBuilder.pm so blib doesn't get bundled in dist.
