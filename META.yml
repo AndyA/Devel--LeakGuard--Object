@@ -1,22 +1,26 @@
---- 
-abstract: "Detect leaks of objects "
-author: 
-  - Adam Kennedy <adamk@cpan.org>
-build_requires: 
-  Test::More: 0.42
-distribution_type: module
-generated_by: Module::Install version 0.68
-license: perl
-meta-spec: 
-  url: http://module-build.sourceforge.net/META-spec-v1.3.html
-  version: 1.3
+---
 name: Devel-LeakGuard-Object
-no_index: 
-  directory: 
-    - inc
-    - t
-requires: 
+version: 0.01
+author:
+  - 'Andy Armstrong <andy@hexten.net>'
+abstract: Scoped checks for object leaks
+license: perl
+resources:
+  bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Devel-LeakGuard-Object
+  license: http://dev.perl.org/licenses/
+requires:
+  List::Util: 1.19
   Scalar::Util: 1.19
-  perl: 5.005
-version: 0.1
-
+  Test::Differences: 0
+  Test::More: 0.42
+provides:
+  Devel::LeakGuard::Object:
+    file: lib/Devel/LeakGuard/Object.pm
+    version: 0.01
+  Devel::LeakGuard::Object::State:
+    file: lib/Devel/LeakGuard/Object/State.pm
+    version: 0.01
+generated_by: Module::Build version 0.33
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
