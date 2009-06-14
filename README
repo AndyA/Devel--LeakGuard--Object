@@ -1,56 +1,21 @@
-NAME
-    Devel::Leak::Object - Detect leaks of objects
+Devel::LeakGuard::Object version 0.01
 
-SYNOPSIS
-      # Track a single object
-      use Devel::Leak::Object;
-      my $obj = Foo::Bar->new;
-      Devel::Leak::Object::track($obj);
-  
-      # Track every object
-      use Devel::Leak::Object qw{ GLOBAL_bless };
+INSTALLATION
 
-DESCRIPTION
-    This module provides tracking of objects, for the purpose of detecting
-    memory leaks due to circular references or innappropriate caching
-    schemes.
+To install this module, run the following commands:
 
-    Object tracking can be enabled on a per object basis. Any objects thus
-    tracked are remembered until DESTROYed; details of any objects left are
-    printed out to stderr at END-time.
+	perl Build.PL
+	./Build
+	./Build test
+	./Build install
 
-      use Devel::Leak::Object qw(GLOBAL_bless);
+DEPENDENCIES
 
-    This form overloads bless to track construction and destruction of all
-    objects. As an alternative, by importing bless, you can just track the
-    objects of the caller code that is doing the use.
+None.
 
-    If you use GLOBAL_bless to overload the bless function, please note that
-    it will ONLY apply to bless for modules loaded AFTER Devel::Leak::Object
-    has enabled the hook.
+COPYRIGHT AND LICENCE
 
-    Any modules already loaded will have already bound to CORE::bless and
-    will not be impacted.
+Copyright (C) 2009, Andy Armstrong
 
-BUGS
-    Please report bugs to http://rt.cpan.org
-
-AUTHOR
-    Adam Kennedy <adamk@cpan.org>
-
-SEE ALSO
-    Devel::Leak
-
-COPYRIGHT
-    Copyright 2007 Adam Kennedy.
-
-    Rewritten from original copyright 2004 Ivor Williams.
-
-    Some documentation also copyright 2004 Ivor Williams.
-
-    This program is free software; you can redistribute it and/or modify it
-    under the same terms as Perl itself.
-
-    The full text of the license can be found in the LICENSE file included
-    with this module.
-
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
