@@ -1,5 +1,7 @@
 package Devel::LeakGuard::Object::State;
 
+use 5.008;
+
 use strict;
 use warnings;
 
@@ -9,7 +11,43 @@ use List::Util qw( max );
 
 =head1 NAME
 
-State - Scoped object leak checking
+Devel::LeakGuard::Object::State - Scoped object leak checking
+
+=head1 VERSION
+
+This document describes Devel::LeakGuard::Object::State version 0.01
+
+=cut
+
+our $VERSION = '0.01';
+
+=head1 SYNOPSIS
+
+  use Devel::LeakGuard::Object::State;
+
+  # Later
+  my $state = Devel::LeakGuard::Object::State->new(
+    on_leak => 'die'
+  );
+
+  My::Thing->leaky();
+
+  $state->done;
+
+=head1 DESCRIPTION
+
+A C<Devel::LeakGuard::Object::State> captures the current state of
+object allocations within a program. When L</done> is called the saved
+allocation state is compared with the current state and any
+discrepancies are reported.
+
+=head1 INTERFACE
+
+=head2 C<< new >>
+
+Create a new C<Devel::LeakGuard::Object::State>. A number of options may
+be supplied. To see the full list refer to
+L<Devel::LeakGuard::Object/leakguard>.
 
 =cut
 
@@ -84,6 +122,7 @@ sub _make_matcher {
   my @m = ();
   for my $elt ( 'ARRAY' eq ref $filter ? @$filter : $filter ) {
     unless ( ref $elt ) {
+      $DB::single = 1 if $elt =~ /\*/;
       my $pat = join '',
        map { '*' eq $_ ? '.*?' : quotemeta $_ } split //, $elt;
       $elt = qr{^$pat$};
@@ -116,6 +155,14 @@ sub _filter {
    ? grep { !$m->( $_ ) } @list
    : grep { $m->( $_ ) } @list;
 }
+
+=head2 C<< done >>
+
+Call C<done> at the end of the area of code to be leak-checked. If
+allocation imbalances are detected the action taken depends on the
+options passed to L</new>. By default a warning is displayed.
+
+=cut
 
 sub done {
   my $self = shift;
@@ -169,4 +216,15 @@ sub DESTROY { shift->done }
 
 1;
 
-# vim:ts=2:sw=2:sts=2:et:ft=perl
+=head1 AUTHOR
+
+Andy Armstrong  C<< <andy@hexten.net> >>
+
+=head1 LICENCE AND COPYRIGHT
+
+Copyright (c) 2009, Andy Armstrong C<< <andy@hexten.net> >>.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic>.
+
+=cut

@@ -109,22 +109,51 @@ To detect any object leaks in a block of code:
 
 =head2 Finding out what leaked
 
-Object tracking can be enabled on a per object basis. Any objects thus
-tracked are remembered until DESTROYed; details of any objects left are
-printed out to stderr at END-time.
+If you use C<leakguard> (recommended) then by default a warning is
+thrown when leaks are detected. You can customise this behaviour by
+passing options to C<leakguard>; see the documentation for L</leakguard>
+for more information.
 
-  use Devel::LeakGuard::Object qw( GLOBAL_bless );
+If you use C<GLOBAL_bless> or C<track> then you can also specify the
+C<:at_end> option
 
-This form overloads B<bless> to track construction and destruction of
-all objects. As an alternative, by importing bless, you can just track
-the objects of the caller code that is doing the use.
+  use Devel::LeakGuard::Object qw( GLOBAL_bless :at_end );
 
-If you use GLOBAL_bless to overload the bless function, please note that
-it will ONLY apply to bless for modules loaded AFTER
-Devel::LeakGuard::Object has enabled the hook.
+in which case a summary of leaks will be displayed at program exit.
 
-Any modules already loaded will have already bound to CORE::bless and
-will not be impacted.
+=head2 Load early!
+
+C<Devel::LeakGuard::Object> can only track allocations of objects
+compiled after it is loaded - so load it as early as possible.
+
+=head2 What is a leak?
+
+This module counts the number of blessed instances of each tracked
+class. When we talk about a 'leak' what we really mean here is an
+imbalance in the number of allocated objects across some boundary. Using
+this definition we see a leak even in the case of expected imbalances.
+
+When interpreting the results you need to remember that it may be quite
+legitimate for certain allocations to live beyond the scope of the code
+under test.
+
+You can use the various options that C<leakguard> supports to filter
+out such legitimate allocations that live beyond the life of the block
+being checked.
+
+=head2 Performance
+
+As soon as C<Devel::LeakGuard::Object> is loaded C<bless> is overloaded.
+That means that C<bless> gets a little slower everywhere. When not
+actually tracking the overloaded C<bless> is quite fast - but still
+around four times slower than the built-in C<bless>.
+
+Bear in mind that C<bless> is fast and unless your program is doing a
+huge amount of blessing you're unlikely to notice a difference. On my
+machine core bless takes around 0.5 μS and loading
+C<Devel::LeakGuard::Object> slows that down to around 2 μS.
+
+=head1 INTERFACE
 
 =cut
 
@@ -197,6 +226,123 @@ will not be impacted.
 
 =head2 C<< leakguard >>
 
+Run a block of code tracking object creation and destruction and report
+any leaks at block exit.
+
+At its simplest C<leakguard> runs a block of code and warns if leaks
+are found:
+
+  leakguard {
+    my $foo = Foo->new;
+    $foo->{me} = $foo; # leak
+  };
+
+  # Displays this warning:
+  Object leaks found:
+    Class Before  After  Delta
+    Foo        3      4      1
+  Detected at foo.pl line 23
+
+If you really don't want to leak you can die instead of warning:
+
+  leakguard {
+    my $foo = Foo->new;
+    $foo->{me} = $foo; # leak
+  }
+  on_leak => 'die';
+
+If you need to do something more complex you can pass a coderef to the
+C<on_leak> option:
+
+  leakguard {
+    my $foo = Foo->new;
+    $foo->{me} = $foo; # leak
+    my $bar = Bar->new;
+    $bar->{me} = $bar; # leak again
+  }
+  on_leak => sub {
+    my $report = shift;
+    for my $pkg ( sort keys %$report ) {
+      printf "%s %d %d\n", $pkg, @{ $report->{$pkg} };
+    }
+    # do something
+  };
+
+In the event of a leak the sub will be called with a reference to a
+hash. The keys of the hash are the names of classes that have leaked;
+the values are refs to two-element arrays containing the bless count for
+that class before and after the block so the example above would print:
+
+  Foo 0 1
+  Bar 0 1
+
+=head3 Options
+
+Other options are supported. Here's the full list:
+
+=over
+
+=item C<on_leak>
+
+What to do if a leak is detected. May be 'warn' (the default), 'die',
+'ignore' or a code reference. If C<on_leak> is set to 'ignore' no leak
+tracking will be performed.
+
+=item C<only>
+
+If you need to concentrate on a subset of classes use C<only> to limit
+leak tracking to a subset of classes:
+
+  leakguard {
+    # do stuff
+  }
+  only => 'My::Stuff::*';
+
+The pattern to match can be a string (with '*' as a shell-style
+wildcard), a C<Regexp>, a coderef or a reference to an array of any of
+the above. This (improbable) example illustrates all of these:
+
+  leakguard {
+    # do stuff
+  }
+  only => [
+    'My::Stuff::*', 
+    qr{Leaky}, 
+    sub { length $_ > 20 } 
+  ];
+
+That would track classes beginning with 'My::Stuff::', containing
+'Leaky' or whose length is greater than 20 characters.
+
+=item C<exclude>
+
+To track all classes apart from a few exceptions use C<exclude>. The
+C<exclude> spec is like an C<only> spec but classes that match will be
+excluded from tracking.
+
+=item C<expect>
+
+Sometimes a certain amount of 'leakage' is acceptable. Imagine, for
+example, an application that maintains a single cached database
+connection in a class called C<My::DB>. The connection is created on
+demand and deleted after it has been used 100 times - to be created
+again next time it's needed.
+
+We could use C<exclude> to ignore this class - but then we'd miss the
+case where something goes wrong and we create 5 connections at a time.
+
+Using C<exclude> we can specify that no more than one C<My::DB> should
+be created or destroyed:
+
+  leakguard {
+    # do stuff
+  }
+  expect => {
+    'My::DB' => [ -1, 1 ] 
+  };
+
+=back
+
 =cut
 
 use Devel::Peek;
@@ -211,11 +357,25 @@ sub leakguard(&@) {
 
 =head2 C<< state >>
 
+Get the current allocation counts for all tracked objects. If
+C<GLOBAL_bless> is in force this will include all blessed objects. If
+you are using the finer-grained tracking tools (L</track> and
+L</leakguard>) then only allocations that they cover will be included.
+
+Returns a reference to a hash with package names as keys and allocation
+counts as values.
+
 =cut
 
 sub state { return {%OBJECT_COUNT} }
 
 =head2 C<< track >>
+
+Track an individual object. Tracking an object increases the allocation count for its package by one. When the object is destroyed the allocation count is decreased by one. Current allocation counts may be retrieved using L</state>.
+
+If the object is reblessed into a different package the count for the
+new package will be incremented and the count for the old package
+decremented.
 
 =cut
 
@@ -334,6 +494,18 @@ sub _mk_next {
   $DESTROY_NEXT{$class}{$_} = '' for @queue;
 }
 
+=head2 C<status>
+
+Print out a L<Devel::Leak::Object> style summary of current object
+allocations. If you
+
+  use Devel::LeakGuard::Object qw( GLOBAL_bless :at_end );
+
+then C<status> will be called at program exit to dump a summary of
+outstanding allocations.
+
+=cut
+
 sub status {
   my $fh = $OPTIONS{stderr} ? *STDERR : *STDOUT;
   print $fh "Tracked objects by class:\n";
@@ -371,7 +543,8 @@ L<http://rt.cpan.org>.
 
 Andy Armstrong  C<< <andy@hexten.net> >>
 
-Based on code taken from Adam Kennedy's L<Devel::Leak::Object> which carries this copyright notice:
+Based on code taken from Adam Kennedy's L<Devel::Leak::Object> which
+carries this copyright notice:
 
   Copyright 2007 Adam Kennedy.
 
