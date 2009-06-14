@@ -9,6 +9,7 @@ META.yml
 README
 t/auto.t
 t/basic.t
+t/guard.t
 t/inherit.t
 t/rebless.t
 t/scope.t
