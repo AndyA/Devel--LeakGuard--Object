@@ -8,6 +8,7 @@ license: perl
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Devel-LeakGuard-Object
   license: http://dev.perl.org/licenses/
+  repository: git://github.com/AndyA/Devel--LeakGuard--Object.git
 requires:
   List::Util: 1.19
   Scalar::Util: 1.19
