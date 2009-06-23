@@ -1,7 +1,6 @@
 #!perl
 
-use strict;
-use warnings;
+use latest;
 
 use Data::Dumper;
 use Test::Differences;
@@ -12,8 +11,7 @@ use Devel::LeakGuard::Object;
 
 package Foo;
 
-use strict;
-use warnings;
+use latest;
 
 sub new {
   my ( $class, $name ) = @_;

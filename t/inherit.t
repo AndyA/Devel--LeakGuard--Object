@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use strict;
+use latest;
 use Test::More tests => 18;
 
 package A;
@@ -15,7 +15,7 @@ package Blah;    # B conflicts with the builtin B::
 use base qw/A/;
 
 package E;
-use strict;
+use latest;
 
 sub new {
   my ( $pkg, $par ) = @_;
@@ -40,7 +40,7 @@ use base qw/Blah D/;
 
 package main;
 
-use strict;
+use latest;
 
 #01
 BEGIN {

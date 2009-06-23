@@ -1,7 +1,6 @@
 #!perl
 
-use strict;
-use warnings;
+use latest;
 
 use Data::Dumper;
 use Test::Differences;

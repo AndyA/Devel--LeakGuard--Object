@@ -19,6 +19,7 @@ my $builder = MyBuilder->new(
     'Scalar::Util'      => '1.19',
     'Test::Differences' => 0,
     'Test::More'        => '0.42',
+    'latest'            => 0,
   },
   add_to_cleanup => ['Devel-LeakGuard-Object-*'],
 );

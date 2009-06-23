@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use strict;
+use latest;
 use Test::More tests => 7;
 
 my $class = 'Foo::Bar';
