@@ -5,3 +5,9 @@ Revision history for Perl module Devel::LeakGuard::Object
 
 0.02  2009-06-14
       - Fix MyBuilder.pm so blib doesn't get bundled in dist.
+
+0.03  2009-06-23
+      - Rename state as leakstate to avoid clashes under use 5.010.
+
+0.04  2009-06-23
+      - Update this file.
