@@ -24,9 +24,9 @@ use warnings;
 
 sub wrap(&) {
   my $block = shift;
-  my $state = Foo->new( 'state' );
+  my $leakstate = Foo->new( 'leakstate' );
   my $rc    = do { $block->() };
-  $state->nop;
+  $leakstate->nop;
   return $rc;
 }
 

@@ -32,12 +32,12 @@ package main;
   my $bar1  = Bar->new( '1bar1' );
 
   {
-    my $state = Devel::LeakGuard::Object::State->new(
+    my $leakstate = Devel::LeakGuard::Object::State->new(
       on_leak => sub { $leaks = shift } );
     {
       my $foo2 = Foo->new( '1foo2' );
     }
-    my $keep = $state;
+    my $keep = $leakstate;
   }
 
   eq_or_diff $leaks, {}, 'no leaks';
@@ -49,13 +49,13 @@ package main;
   my $bar1  = Bar->new( '2bar1' );
 
   {
-    my $state = Devel::LeakGuard::Object::State->new(
+    my $leakstate = Devel::LeakGuard::Object::State->new(
       on_leak => sub { $leaks = shift } );
     {
       my $foo2 = Foo->new( '2foo2' );
       $foo2->{me} = $foo2;
     }
-    my $keep = $state;
+    my $keep = $leakstate;
   }
 
   eq_or_diff $leaks, { Foo => [ 0, 1 ] }, 'leaks';

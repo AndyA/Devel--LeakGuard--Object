@@ -13,7 +13,7 @@ use Devel::LeakGuard::Object::State;
 
 use base qw( Exporter );
 
-our @EXPORT_OK = qw( _adj_magic track state status leakguard );
+our @EXPORT_OK = qw( _adj_magic track leakstate status leakguard );
 
 our %OPTIONS = (
   at_end => 0,
@@ -348,14 +348,14 @@ be created or destroyed:
 use Devel::Peek;
 
 sub leakguard(&@) {
-  my $block = shift;
-  my $state = Devel::LeakGuard::Object::State->new( @_ );
+  my $block     = shift;
+  my $leakstate = Devel::LeakGuard::Object::State->new( @_ );
   $block->();
-  $state->done();
+  $leakstate->done();
   return;
 }
 
-=head2 C<< state >>
+=head2 C<< leakstate >>
 
 Get the current allocation counts for all tracked objects. If
 C<GLOBAL_bless> is in force this will include all blessed objects. If
@@ -367,11 +367,11 @@ counts as values.
 
 =cut
 
-sub state { return {%OBJECT_COUNT} }
+sub leakstate { return {%OBJECT_COUNT} }
 
 =head2 C<< track >>
 
-Track an individual object. Tracking an object increases the allocation count for its package by one. When the object is destroyed the allocation count is decreased by one. Current allocation counts may be retrieved using L</state>.
+Track an individual object. Tracking an object increases the allocation count for its package by one. When the object is destroyed the allocation count is decreased by one. Current allocation counts may be retrieved using L</leakstate>.
 
 If the object is reblessed into a different package the count for the
 new package will be incremented and the count for the old package

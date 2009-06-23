@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 use Carp qw( croak carp );
-use Devel::LeakGuard::Object qw( _adj_magic state );
+use Devel::LeakGuard::Object qw( _adj_magic leakstate );
 use List::Util qw( max );
 
 =head1 NAME
@@ -26,19 +26,19 @@ our $VERSION = '0.03';
   use Devel::LeakGuard::Object::State;
 
   # Later
-  my $state = Devel::LeakGuard::Object::State->new(
+  my $leakstate = Devel::LeakGuard::Object::State->new(
     on_leak => 'die'
   );
 
   My::Thing->leaky();
 
-  $state->done;
+  $leakstate->done;
 
 =head1 DESCRIPTION
 
-A C<Devel::LeakGuard::Object::State> captures the current state of
+A C<Devel::LeakGuard::Object::State> captures the current leakstate of
 object allocations within a program. When L</done> is called the saved
-allocation state is compared with the current state and any
+allocation leakstate is compared with the current leakstate and any
 discrepancies are reported.
 
 =head1 INTERFACE
@@ -64,7 +64,7 @@ sub new {
 
   _adj_magic( 1 );
 
-  my $self = bless { state => state() }, $class;
+  my $self = bless { leakstate => leakstate() }, $class;
 
   $self->{on_leak} = $on_leak eq 'die'
    ? sub {
@@ -171,14 +171,14 @@ sub done {
   return if $self->{done}++;
 
   _adj_magic( -1 );
-  my $state  = state();
-  my %seen   = ();
-  my %report = ();
+  my $leakstate = leakstate();
+  my %seen      = ();
+  my %report    = ();
 
-  for my $class ( sort keys %{ $self->{state} }, %$state ) {
+  for my $class ( sort keys %{ $self->{leakstate} }, %$leakstate ) {
     next if $seen{$class}++;
-    my $before = $self->{state}{$class} || 0;
-    my $after  = $state->{$class}       || 0;
+    my $before = $self->{leakstate}{$class} || 0;
+    my $after  = $leakstate->{$class}       || 0;
     $report{$class} = [ $before, $after ] if $before != $after;
   }
 
