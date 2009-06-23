@@ -60,14 +60,16 @@ sub ACTION_critic {
 }
 
 sub ACTION_tags {
-  exec( qw(
+  exec(
+    qw(
      ctags -f tags --recurse --totals
      --exclude=blib
      --exclude=.svn
      --exclude='*~'
      --languages=Perl
      t/ lib/
-  ) );
+     )
+  );
 }
 
 sub ACTION_tidy {

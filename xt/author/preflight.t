@@ -25,7 +25,8 @@ sub scan_project {
       while ( <$fh> ) {
         /\$DB::single/ && $error{db_single}++;
       }
-    } );
+    }
+  );
   return \%error;
 }
 
