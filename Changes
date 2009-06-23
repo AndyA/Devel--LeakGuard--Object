@@ -11,3 +11,6 @@ Revision history for Perl module Devel::LeakGuard::Object
 
 0.04  2009-06-23
       - Update this file.
+
+0.05  2009-06-23
+      - Use latest instead of strict + warn.
