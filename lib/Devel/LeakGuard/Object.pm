@@ -371,7 +371,10 @@ sub leakstate { return {%OBJECT_COUNT} }
 
 =head2 C<< track >>
 
-Track an individual object. Tracking an object increases the allocation count for its package by one. When the object is destroyed the allocation count is decreased by one. Current allocation counts may be retrieved using L</leakstate>.
+Track an individual object. Tracking an object increases the allocation
+count for its package by one. When the object is destroyed the
+allocation count is decreased by one. Current allocation counts may be
+retrieved using L</leakstate>.
 
 If the object is reblessed into a different package the count for the
 new package will be incremented and the count for the old package
