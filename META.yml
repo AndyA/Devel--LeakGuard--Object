@@ -1,6 +1,7 @@
 ---
 name: Devel-LeakGuard-Object
-version: 0.03
+version: 0.04
+
 author:
   - 'Andy Armstrong <andy@hexten.net>'
 abstract: Scoped checks for object leaks
