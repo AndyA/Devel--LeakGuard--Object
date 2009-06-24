@@ -29,11 +29,11 @@ Devel::LeakGuard::Object - Scoped checks for object leaks
 
 =head1 VERSION
 
-This document describes Devel::LeakGuard::Object version 0.05
+This document describes Devel::LeakGuard::Object version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 

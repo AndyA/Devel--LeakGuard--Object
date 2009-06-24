@@ -15,11 +15,11 @@ Devel::LeakGuard::Object::State - Scoped object leak checking
 
 =head1 VERSION
 
-This document describes Devel::LeakGuard::Object::State version 0.05
+This document describes Devel::LeakGuard::Object::State version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
