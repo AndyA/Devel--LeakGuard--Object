@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 use Carp qw( croak carp );
-use Devel::LeakGuard::Object qw( _adj_magic leakstate );
+use Devel::LeakGuard::Object;
 use List::Util qw( max );
 
 =head1 NAME
@@ -62,9 +62,11 @@ sub new {
   return bless {}, 'Devel::LeakGuard::Object::State::Nop'
    if $on_leak eq 'ignore';
 
-  _adj_magic( 1 );
+  Devel::LeakGuard::Object::_adj_magic( 1 );
 
-  my $self = bless { leakstate => leakstate() }, $class;
+  my $self
+   = bless { leakstate => Devel::LeakGuard::Object::leakstate() },
+   $class;
 
   $self->{on_leak} = $on_leak eq 'die'
    ? sub {
@@ -170,8 +172,8 @@ sub done {
   #  print "done ", ref $self, " at $file, $line\n";
   return if $self->{done}++;
 
-  _adj_magic( -1 );
-  my $leakstate = leakstate();
+  Devel::LeakGuard::Object::_adj_magic( -1 );
+  my $leakstate = Devel::LeakGuard::Object::leakstate();
   my %seen      = ();
   my %report    = ();
 

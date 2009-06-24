@@ -13,7 +13,7 @@ use Devel::LeakGuard::Object::State;
 
 use base qw( Exporter );
 
-our @EXPORT_OK = qw( _adj_magic track leakstate status leakguard );
+our @EXPORT_OK = qw( track leakstate status leakguard );
 
 our %OPTIONS = (
   at_end => 0,
