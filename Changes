@@ -14,3 +14,8 @@ Revision history for Perl module Devel::LeakGuard::Object
 
 0.05  2009-06-23
       - Use latest instead of strict + warn.
+
+0.06  2009-06-24
+      - Fix import problems caused by circular relationship between
+        DLO and DLOS.
+
