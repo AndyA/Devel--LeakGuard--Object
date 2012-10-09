@@ -67,7 +67,7 @@ package main;
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
      . "  Foo        1      2      1\n"
-     . "Detected at t/guard.t line #\n" ], 'implicit warn';
+     . "Detected at t/guard.t line #.\n" ], 'implicit warn';
 }
 
 {
@@ -94,7 +94,7 @@ package main;
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
      . "  Foo        2      3      1\n"
-     . "Detected at t/guard.t line #\n" ], 'explicit warn';
+     . "Detected at t/guard.t line #.\n" ], 'explicit warn';
 }
 
 {
@@ -112,7 +112,7 @@ package main;
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
      . "  Foo        3      4      1\n"
-     . "Detected at t/guard.t line #\n" ], 'die';
+     . "Detected at t/guard.t line #.\n" ], 'die';
 }
 
 {
