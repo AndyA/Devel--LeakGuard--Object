@@ -23,6 +23,8 @@ our %OPTIONS = (
 our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
   %TRACKED );
 
+=encoding utf8
+
 =head1 NAME
 
 Devel::LeakGuard::Object - Scoped checks for object leaks
