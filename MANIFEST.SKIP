@@ -8,6 +8,7 @@
 # Makemaker generated files and dirs.
 ^MANIFEST\.
 ^Makefile$
+^MYMETA\.(yml|json)$
 ^Build$
 ^andy/
 ^ref/
