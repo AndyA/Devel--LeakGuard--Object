@@ -55,6 +55,17 @@ package main;
   eq_or_diff $leaks, { Foo => [ 0, 1 ] }, 'leaks';
 }
 
+# Some versions of Carp.pm/perl emit a full stop (".") after the line
+# number and some don't. We're going to handle both cases here.
+sub normalize_line_num
+{
+  my ($w) = @_;
+
+  s/line \d+\.?/line #/g for @$w;
+
+  return;
+}
+
 {
   my @w = ();
   local $SIG{__WARN__} = sub { push @w, @_ };
@@ -62,7 +73,7 @@ package main;
     my $foo1 = Foo->new( '3foo1' );
     $foo1->{me} = $foo1;
   };
-  s/line \d+/line #/g for @w;
+  normalize_line_num(\@w);
   eq_or_diff [@w],
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
@@ -89,7 +100,7 @@ package main;
     $foo1->{me} = $foo1;
   }
   on_leak => 'warn';
-  s/line \d+/line #/g for @w;
+  normalize_line_num(\@w);
   eq_or_diff [@w],
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
@@ -107,7 +118,7 @@ package main;
     }
     on_leak => 'die';
   };
-  s/line \d+/line #/g for @w;
+  normalize_line_num(\@w);
   eq_or_diff [@w],
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
