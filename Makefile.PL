@@ -1,0 +1,36 @@
+use strict;
+use warnings;
+
+use ExtUtils::MakeMaker '7.0';
+
+WriteMakefile(
+    NAME            => 'Devel::LeakGuard::Object',
+    VERSION_FROM    => 'lib/Devel/LeakGuard/Object.pm',
+    AUTHOR          => 'Andy Armstrong <andy@hexten.net>',
+    LICENSE         => 'perl',
+    BUILD_REQUIRES  => {
+            'Carp'         => 0,
+            'Data::Dumper' => 0,
+            'Devel::Peek'  => 0,
+            'List::Util'   => '1.19',
+            'Scalar::Util' => '1.19',
+        },
+    TEST_REQUIRES   => {
+            'latest'            => 0,
+            'File::Find'        => 0,
+            'Test::More'        => '0.42',
+            'Test::Differences' => 0,
+
+        },
+    META_MERGE      => {
+        resources => {
+            repository  => 'https://github.com/AndyA/Devel--LeakGuard--Object.git',
+            bugtracker  => 'https://github.com/AndyA/Devel--LeakGuard--Object/issues',
+        },
+    },
+    dist            => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    clean           => { FILES => 'Devel-LeakGuard-Object-*' },
+    test            => { TESTS => join( ' ', (glob( 't/*.t'), glob('xt/author/*.t'))) },
+);
+
+# vim: expandtab shiftwidth=4
