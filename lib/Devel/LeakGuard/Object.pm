@@ -559,7 +559,7 @@ carries this copyright notice:
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) 2009, Andy Armstrong C<< <andy@hexten.net> >>.
+Copyright (c) 2009-2015, Andy Armstrong C<< <andy@hexten.net> >>.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.
