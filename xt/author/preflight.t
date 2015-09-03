@@ -3,8 +3,13 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;
+use Test::More;
 use File::Find;
+
+plan( skip_all => "Author tests not required for installation" )
+    unless $ENV{RELEASE_TESTING};
+
+plan tests => 1;
 
 # TODO this + the name matching regexp won't do for ./bin
 use constant SRC => qw( lib inc xt t );
@@ -44,4 +49,3 @@ sub scan_dirs {
 }
 
 # vim:ts=2:sw=2:et:ft=perl
-
