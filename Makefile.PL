@@ -33,4 +33,13 @@ WriteMakefile(
     test            => { TESTS => join( ' ', (glob( 't/*.t'), glob('xt/author/*.t'))) },
 );
 
+sub MY::postamble {
+    return <<'MAKE_FRAG';
+critic:
+	perlcritic -1 -q lib/ t/*.t xt/author/*.t
+
+
+MAKE_FRAG
+}
+
 # vim: expandtab shiftwidth=4
