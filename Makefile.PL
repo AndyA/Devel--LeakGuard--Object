@@ -5,6 +5,7 @@ use ExtUtils::MakeMaker '7.0';
 
 WriteMakefile(
     NAME            => 'Devel::LeakGuard::Object',
+    ABSTRACT        => 'Scoped checks for object leaks',
     VERSION_FROM    => 'lib/Devel/LeakGuard/Object.pm',
     AUTHOR          => 'Andy Armstrong <andy@hexten.net>',
     LICENSE         => 'perl',
