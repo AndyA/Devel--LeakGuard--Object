@@ -4,6 +4,7 @@
 \B\.git\b
 ^\.cvsignore
 ^\.gitignore
+^\.travis.yml
 
 # Makemaker generated files and dirs.
 ^MANIFEST\.
