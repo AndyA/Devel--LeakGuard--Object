@@ -6,7 +6,7 @@ lib/Devel/LeakGuard/Object/State.pm
 LICENSE
 MANIFEST
 META.yml
-README
+README.md
 t/auto.t
 t/basic.t
 t/guard.t
