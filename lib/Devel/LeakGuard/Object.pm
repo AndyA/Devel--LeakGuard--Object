@@ -43,7 +43,7 @@ our $VERSION = '0.07';
   use Devel::LeakGuard::Object;
   my $obj = Foo::Bar->new;
   Devel::LeakGuard::Object::track($obj);
-  
+
   # Track every object
   use Devel::LeakGuard::Object qw( GLOBAL_bless );
 
@@ -308,9 +308,9 @@ the above. This (improbable) example illustrates all of these:
     # do stuff
   }
   only => [
-    'My::Stuff::*', 
-    qr{Leaky}, 
-    sub { length $_ > 20 } 
+    'My::Stuff::*',
+    qr{Leaky},
+    sub { length $_ > 20 }
   ];
 
 That would track classes beginning with 'My::Stuff::', containing
@@ -340,7 +340,7 @@ be created or destroyed:
     # do stuff
   }
   expect => {
-    'My::DB' => [ -1, 1 ] 
+    'My::DB' => [ -1, 1 ]
   };
 
 =back
