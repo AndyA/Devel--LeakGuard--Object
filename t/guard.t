@@ -78,7 +78,7 @@ sub normalize_line_num
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
      . "  Foo        1      2      1\n"
-     . "Detected at t/guard.t line #\n" ], 'implicit warn';
+     . "Detected at t/guard.t line #.\n" ], 'implicit warn';
 }
 
 {
@@ -105,7 +105,7 @@ sub normalize_line_num
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
      . "  Foo        2      3      1\n"
-     . "Detected at t/guard.t line #\n" ], 'explicit warn';
+     . "Detected at t/guard.t line #.\n" ], 'explicit warn';
 }
 
 {
@@ -123,7 +123,7 @@ sub normalize_line_num
    [   "Object leaks found:\n"
      . "  Class Before  After  Delta\n"
      . "  Foo        3      4      1\n"
-     . "Detected at t/guard.t line #\n" ], 'die';
+     . "Detected at t/guard.t line #.\n" ], 'die';
 }
 
 {
