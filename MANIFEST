@@ -1,11 +1,11 @@
 Makefile.PL
 Changes
-inc/MyBuilder.pm
 lib/Devel/LeakGuard/Object.pm
 lib/Devel/LeakGuard/Object/State.pm
 LICENSE
 MANIFEST
 META.yml
+META.json
 README.md
 t/auto.t
 t/basic.t
@@ -17,4 +17,3 @@ xt/author/manifest.t
 xt/author/pod-coverage.t
 xt/author/pod.t
 xt/author/preflight.t
-META.json
