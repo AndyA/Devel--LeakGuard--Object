@@ -12,7 +12,7 @@ plan( skip_all => "Author tests not required for installation" )
 plan tests => 1;
 
 # TODO this + the name matching regexp won't do for ./bin
-use constant SRC => qw( lib inc xt t );
+use constant SRC => qw( lib xt t );
 
 ### Assorted pre-flight tests ###
 
