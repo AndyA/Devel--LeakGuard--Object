@@ -19,6 +19,8 @@ Revision history for Perl module Devel::LeakGuard::Object
       - Fix import problems caused by circular relationship between
         DLO and DLOS.
 
-0.07  Unknown
+0.07  2015-09-04
       - Fix t/guard.t test failures on some versions of perl and Carp.pm
-      due to an extra full stop (".").
+        due to an extra full stop (".").
+      - Replace Module::Build with ExtUtils::MakeMaker
+      - Basic code and distribution cleanup
