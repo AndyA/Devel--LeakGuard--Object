@@ -7,10 +7,6 @@ It is derived from, and backwards compatible with Adam Kennedy's
 [Devel::Leak::Object](https://metacpan.org/pod/Devel::Leak::Object). Any
 errors are mine.
 
-## Version
-
-0.08
-
 ## Installation
 
 The simplest way to install this module is via the `cpanm` utility:
