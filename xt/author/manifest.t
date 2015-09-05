@@ -18,4 +18,4 @@ my ( $missing, $extra ) = ExtUtils::Manifest::fullcheck();
 is_deeply $missing, [], 'missing files';
 is_deeply $extra,   [], 'extra files';
 
-# vim:ts=2:sw=2:et:ft=perl
+# vim: expandtab shiftwidth=4

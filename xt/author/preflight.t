@@ -48,4 +48,4 @@ sub scan_dirs {
    @dirs;
 }
 
-# vim:ts=2:sw=2:et:ft=perl
+# vim: expandtab shiftwidth=4

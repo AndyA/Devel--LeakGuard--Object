@@ -59,5 +59,4 @@ package main;
   eq_or_diff $leaks, { Foo => [ 0, 1 ] }, 'leaks';
 }
 
-# vim:ts=2:sw=2:et:ft=perl
-
+# vim: expandtab shiftwidth=4

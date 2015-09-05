@@ -30,3 +30,5 @@ is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class},
   0, 'no objects left' );
 is( scalar( keys %Devel::LeakGuard::Object::TRACKED ),
   0, 'Nothing still tracked' );
+
+# vim: expandtab shiftwidth=4

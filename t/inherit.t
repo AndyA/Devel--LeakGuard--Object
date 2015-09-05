@@ -155,3 +155,4 @@ is(
   'Inherited DESTROY method C::foo4'
 );
 
+# vim: expandtab shiftwidth=4
