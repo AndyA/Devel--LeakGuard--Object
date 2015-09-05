@@ -11,6 +11,12 @@ errors are mine.
 
 0.08
 
+## Installation
+
+The simplest way to install this module is via the `cpanm` utility:
+
+    cpanm Devel::LeakGuard::Object
+
 ## Installation from source
 
 To install this module, run the following commands:
