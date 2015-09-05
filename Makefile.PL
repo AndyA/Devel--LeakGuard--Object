@@ -24,6 +24,7 @@ WriteMakefile(
     TEST_REQUIRES   => {
             'latest'            => 0,
             'File::Find'        => 0,
+            'Test::Kwalitee'    => 0,
         },
     META_MERGE      => {
         resources => {
