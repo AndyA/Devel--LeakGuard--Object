@@ -10,7 +10,6 @@
 ^MANIFEST\.
 ^Makefile$
 ^MYMETA\.(yml|json)$
-^Build$
 ^andy/
 ^ref/
 ^incoming/
