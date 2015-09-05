@@ -24,10 +24,6 @@ To install this module, run the following commands:
     make test
     make install
 
-## Dependencies
-
-None.
-
 ## Copyright and Licence
 
 Copyright (C) 2009-2015, Andy Armstrong
