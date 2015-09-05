@@ -11,14 +11,14 @@ errors are mine.
 
 0.08
 
-## Installation
+## Installation from source
 
 To install this module, run the following commands:
 
-    perl Build.PL
-    ./Build
-    ./Build test
-    ./Build install
+    perl Makefile.PL
+    make
+    make test
+    make install
 
 ## Dependencies
 
