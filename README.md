@@ -1,5 +1,7 @@
 # Devel::LeakGuard::Object
 
+https://travis-ci.org/paultcochrane/Devel--LeakGuard--Object.svg?branch=master
+
 This module provides tracking of objects, for the purpose of detecting memory
 leaks due to circular references or innappropriate caching schemes.
 
