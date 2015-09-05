@@ -16,12 +16,12 @@ use base qw( Exporter );
 our @EXPORT_OK = qw( track leakstate status leakguard );
 
 our %OPTIONS = (
-  at_end => 0,
-  stderr => 0
+    at_end => 0,
+    stderr => 0
 );
 
 our ( %DESTROY_NEXT, %DESTROY_ORIGINAL, %DESTROY_STUBBED, %OBJECT_COUNT,
-  %TRACKED );
+    %TRACKED );
 
 =encoding utf8
 
@@ -52,12 +52,12 @@ our $VERSION = '0.08';
 
   # Track a block of code, warning on leaks
   leakguard {
-    # your potentially leaky code here
+      # your potentially leaky code here
   };
 
   # Track a block of code, die on leaks
   leakguard {
-    # your potentially leaky code here
+      # your potentially leaky code here
   }
   on_leak => 'die';
 
@@ -102,7 +102,7 @@ To detect any object leaks in a block of code:
   use Devel::LeakGuard::Object qw( leakguard );
 
   leakguard {
-    # your code here.
+      # your code here.
   };
 
 =head2 Tracking global object leaks
@@ -160,70 +160,70 @@ C<Devel::LeakGuard::Object> slows that down to around 2 μS.
 =cut
 
 {
-  my $magic = 0;
+    my $magic = 0;
 
-  my $plain_bless = sub {
-    my $ref = shift;
-    my $class = @_ ? shift : scalar caller;
-    return CORE::bless( $ref, $class );
-  };
+    my $plain_bless = sub {
+        my $ref = shift;
+        my $class = @_ ? shift : scalar caller;
+        return CORE::bless( $ref, $class );
+    };
 
-  my $magic_bless = sub {
-    my $ref    = shift;
-    my $class  = @_ ? shift : scalar caller;
-    my $object = CORE::bless( $ref, $class );
-    unless ( $class->isa( 'Devel::LeakGuard::Object::State' ) ) {
-      Devel::LeakGuard::Object::track( $object );
+    my $magic_bless = sub {
+        my $ref    = shift;
+        my $class  = @_ ? shift : scalar caller;
+        my $object = CORE::bless( $ref, $class );
+        unless ( $class->isa( 'Devel::LeakGuard::Object::State' ) ) {
+            Devel::LeakGuard::Object::track( $object );
+        }
+        return $object;
+    };
+
+    sub import {
+        my $class  = shift;
+        my @args   = @_;
+        my @import = ();
+
+        unless ( *CORE::GLOBAL::bless eq $plain_bless ) {
+            # We don't actually need to install our version of bless here but
+            # it'd be nice if any problems that it caused showed up sooner
+            # rather than later.
+            local $SIG{__WARN__} = sub {
+                warn "It looks as if something else is already "
+                . "overloading bless; there may be troubles ahead";
+            };
+            *CORE::GLOBAL::bless = $plain_bless;
+        }
+
+        for my $a ( @args ) {
+            if ( 'GLOBAL_bless' eq $a ) {
+                _adj_magic( 1 );
+            }
+            elsif ( $a =~ /^:(.+)$/ ) {
+                croak "Bad option: $1" unless exists $OPTIONS{$1};
+                $OPTIONS{$1}++;
+            }
+            else {
+                push @import, $a;
+            }
+        }
+
+        return __PACKAGE__->export_to_level( 1, $class, @import );
     }
-    return $object;
-  };
 
-  sub import {
-    my $class  = shift;
-    my @args   = @_;
-    my @import = ();
-
-    unless ( *CORE::GLOBAL::bless eq $plain_bless ) {
-      # We don't actually need to install our version of bless here but
-      # it'd be nice if any problems that it caused showed up sooner
-      # rather than later.
-      local $SIG{__WARN__} = sub {
-        warn "It looks as if something else is already "
-         . "overloading bless; there may be troubles ahead";
-      };
-      *CORE::GLOBAL::bless = $plain_bless;
+    sub _adj_magic {
+        my $adj       = shift;
+        my $old_magic = $magic;
+        $magic = 0 if ( $magic += $adj ) < 0;
+        {
+            no warnings 'redefine';
+            if ( $old_magic > 0 && $magic == 0 ) {
+                *CORE::GLOBAL::bless = $plain_bless;
+            }
+            elsif ( $old_magic == 0 && $magic > 0 ) {
+                *CORE::GLOBAL::bless = $magic_bless;
+            }
+        }
     }
-
-    for my $a ( @args ) {
-      if ( 'GLOBAL_bless' eq $a ) {
-        _adj_magic( 1 );
-      }
-      elsif ( $a =~ /^:(.+)$/ ) {
-        croak "Bad option: $1" unless exists $OPTIONS{$1};
-        $OPTIONS{$1}++;
-      }
-      else {
-        push @import, $a;
-      }
-    }
-
-    return __PACKAGE__->export_to_level( 1, $class, @import );
-  }
-
-  sub _adj_magic {
-    my $adj       = shift;
-    my $old_magic = $magic;
-    $magic = 0 if ( $magic += $adj ) < 0;
-    {
-      no warnings 'redefine';
-      if ( $old_magic > 0 && $magic == 0 ) {
-        *CORE::GLOBAL::bless = $plain_bless;
-      }
-      elsif ( $old_magic == 0 && $magic > 0 ) {
-        *CORE::GLOBAL::bless = $magic_bless;
-      }
-    }
-  }
 }
 
 =head2 C<< leakguard >>
@@ -235,8 +235,8 @@ At its simplest C<leakguard> runs a block of code and warns if leaks
 are found:
 
   leakguard {
-    my $foo = Foo->new;
-    $foo->{me} = $foo; # leak
+      my $foo = Foo->new;
+      $foo->{me} = $foo; # leak
   };
 
   # Displays this warning:
@@ -248,8 +248,8 @@ are found:
 If you really don't want to leak you can die instead of warning:
 
   leakguard {
-    my $foo = Foo->new;
-    $foo->{me} = $foo; # leak
+      my $foo = Foo->new;
+      $foo->{me} = $foo; # leak
   }
   on_leak => 'die';
 
@@ -257,17 +257,17 @@ If you need to do something more complex you can pass a coderef to the
 C<on_leak> option:
 
   leakguard {
-    my $foo = Foo->new;
-    $foo->{me} = $foo; # leak
-    my $bar = Bar->new;
-    $bar->{me} = $bar; # leak again
+      my $foo = Foo->new;
+      $foo->{me} = $foo; # leak
+      my $bar = Bar->new;
+      $bar->{me} = $bar; # leak again
   }
   on_leak => sub {
-    my $report = shift;
-    for my $pkg ( sort keys %$report ) {
-      printf "%s %d %d\n", $pkg, @{ $report->{$pkg} };
-    }
-    # do something
+      my $report = shift;
+      for my $pkg ( sort keys %$report ) {
+        printf "%s %d %d\n", $pkg, @{ $report->{$pkg} };
+      }
+      # do something
   };
 
 In the event of a leak the sub will be called with a reference to a
@@ -296,7 +296,7 @@ If you need to concentrate on a subset of classes use C<only> to limit
 leak tracking to a subset of classes:
 
   leakguard {
-    # do stuff
+      # do stuff
   }
   only => 'My::Stuff::*';
 
@@ -305,12 +305,12 @@ wildcard), a C<Regexp>, a coderef or a reference to an array of any of
 the above. This (improbable) example illustrates all of these:
 
   leakguard {
-    # do stuff
+      # do stuff
   }
   only => [
-    'My::Stuff::*',
-    qr{Leaky},
-    sub { length $_ > 20 }
+      'My::Stuff::*',
+      qr{Leaky},
+      sub { length $_ > 20 }
   ];
 
 That would track classes beginning with 'My::Stuff::', containing
@@ -337,10 +337,10 @@ Using C<exclude> we can specify that no more than one C<My::DB> should
 be created or destroyed:
 
   leakguard {
-    # do stuff
+      # do stuff
   }
   expect => {
-    'My::DB' => [ -1, 1 ]
+      'My::DB' => [ -1, 1 ]
   };
 
 =back
@@ -350,11 +350,11 @@ be created or destroyed:
 use Devel::Peek;
 
 sub leakguard(&@) {
-  my $block     = shift;
-  my $leakstate = Devel::LeakGuard::Object::State->new( @_ );
-  $block->();
-  $leakstate->done();
-  return;
+    my $block     = shift;
+    my $leakstate = Devel::LeakGuard::Object::State->new( @_ );
+    $block->();
+    $leakstate->done();
+    return;
 }
 
 =head2 C<< leakstate >>
@@ -385,118 +385,118 @@ decremented.
 =cut
 
 sub track {
-  my $object = shift;
-  my $class  = blessed $object;
+    my $object = shift;
+    my $class  = blessed $object;
 
-  carp "Devel::LeakGuard::Object::track was passed a non-object"
-   unless defined $class;
+    carp "Devel::LeakGuard::Object::track was passed a non-object"
+    unless defined $class;
 
-  my $address = refaddr $object;
-  if ( $TRACKED{$address} ) {
+    my $address = refaddr $object;
+    if ( $TRACKED{$address} ) {
 
-    # Reblessing into the same class, ignore
-    return $OBJECT_COUNT{$class}
-     if $class eq $TRACKED{$address};
+        # Reblessing into the same class, ignore
+        return $OBJECT_COUNT{$class}
+        if $class eq $TRACKED{$address};
 
-    # Reblessing into a different class
-    $OBJECT_COUNT{ $TRACKED{$address} }--;
-  }
-
-  $TRACKED{$address} = $class;
-
-  unless ( $DESTROY_STUBBED{$class} ) {
-    no strict 'refs';
-    no warnings 'redefine';
-
-    if ( exists ${ $class . '::' }{DESTROY}
-      and *{ $class . '::DESTROY' }{CODE} ) {
-      $DESTROY_ORIGINAL{$class} = \&{ $class . '::DESTROY' };
+        # Reblessing into a different class
+        $OBJECT_COUNT{ $TRACKED{$address} }--;
     }
 
-    $DESTROY_STUBBED{$class} = 1;
+    $TRACKED{$address} = $class;
 
-    *{"${class}::DESTROY"} = _mk_destroy( $class );
+    unless ( $DESTROY_STUBBED{$class} ) {
+        no strict 'refs';
+        no warnings 'redefine';
 
-    _mk_next( $class );
-  }
+        if ( exists ${ $class . '::' }{DESTROY}
+                and *{ $class . '::DESTROY' }{CODE} ) {
+            $DESTROY_ORIGINAL{$class} = \&{ $class . '::DESTROY' };
+        }
 
-  $OBJECT_COUNT{ $TRACKED{$address} }++;
+        $DESTROY_STUBBED{$class} = 1;
+
+        *{"${class}::DESTROY"} = _mk_destroy( $class );
+
+        _mk_next( $class );
+    }
+
+    $OBJECT_COUNT{ $TRACKED{$address} }++;
 }
 
 sub _mk_destroy {
-  my $pkg = shift;
+    my $pkg = shift;
 
-  return sub {
-    my $self    = $_[0];
-    my $class   = blessed $self;
-    my $address = refaddr $self;
+    return sub {
+        my $self    = $_[0];
+        my $class   = blessed $self;
+        my $address = refaddr $self;
 
-    die "Unexpected error: First param to DESTROY is no an object"
-     unless defined $class;
+        die "Unexpected error: First param to DESTROY is no an object"
+        unless defined $class;
 
-    # Don't do anything unless tracking for the specific object is set
-    my $original = $TRACKED{$address};
-    if ( $original ) {
+        # Don't do anything unless tracking for the specific object is set
+        my $original = $TRACKED{$address};
+        if ( $original ) {
 
-      warn "Object class '$class' does",
-       " not match original $TRACKED{$address}"
-       if $class ne $original;
+            warn "Object class '$class' does",
+            " not match original $TRACKED{$address}"
+            if $class ne $original;
 
-      $OBJECT_COUNT{$original}--;
+            $OBJECT_COUNT{$original}--;
 
-      warn "Object count for $TRACKED{$address}",
-       " negative ($OBJECT_COUNT{$original})"
-       if $OBJECT_COUNT{$original} < 0;
+            warn "Object count for $TRACKED{$address}",
+            " negative ($OBJECT_COUNT{$original})"
+            if $OBJECT_COUNT{$original} < 0;
 
-      delete $TRACKED{$address};
+            delete $TRACKED{$address};
 
-      goto &{ $DESTROY_ORIGINAL{$original} }
-       if $DESTROY_ORIGINAL{$original};
-    }
-    else {
-      $original = $class;
-    }
+            goto &{ $DESTROY_ORIGINAL{$original} }
+            if $DESTROY_ORIGINAL{$original};
+        }
+        else {
+            $original = $class;
+        }
 
-    # If we don't have the DESTROY_NEXT for this class, populate it
-    _mk_next( $original );
-    my $super = $DESTROY_NEXT{$original}{$pkg};
-    goto &{"${super}::DESTROY"} if $super;
-    return;
-  };
+        # If we don't have the DESTROY_NEXT for this class, populate it
+        _mk_next( $original );
+        my $super = $DESTROY_NEXT{$original}{$pkg};
+        goto &{"${super}::DESTROY"} if $super;
+        return;
+    };
 }
 
 sub _mk_next {
-  my $class = shift;
+    my $class = shift;
 
-  no strict 'refs';
-  return if $DESTROY_NEXT{$class};
+    no strict 'refs';
+    return if $DESTROY_NEXT{$class};
 
-  $DESTROY_NEXT{$class} = {};
+    $DESTROY_NEXT{$class} = {};
 
-  my @stack = ( $class );
-  my %seen  = ( UNIVERSAL => 1 );
-  my @queue = ();
+    my @stack = ( $class );
+    my %seen  = ( UNIVERSAL => 1 );
+    my @queue = ();
 
-  while ( my $c = pop @stack ) {
-    next if $seen{$c}++;
+    while ( my $c = pop @stack ) {
+        next if $seen{$c}++;
 
-    my $has_destroy
-     = $DESTROY_STUBBED{$c}
-     ? exists $DESTROY_ORIGINAL{$c}
-     : ( exists ${"${c}::"}{DESTROY} and *{"${c}::DESTROY"}{CODE} );
+        my $has_destroy
+        = $DESTROY_STUBBED{$c}
+        ? exists $DESTROY_ORIGINAL{$c}
+        : ( exists ${"${c}::"}{DESTROY} and *{"${c}::DESTROY"}{CODE} );
 
-    if ( $has_destroy ) {
-      $DESTROY_NEXT{$class}{$_} = $c for @queue;
-      @queue = ();
+        if ( $has_destroy ) {
+            $DESTROY_NEXT{$class}{$_} = $c for @queue;
+            @queue = ();
+        }
+        else {
+            push @queue, $c;
+        }
+
+        push @stack, reverse @{"${c}::ISA"};
     }
-    else {
-      push @queue, $c;
-    }
 
-    push @stack, reverse @{"${c}::ISA"};
-  }
-
-  $DESTROY_NEXT{$class}{$_} = '' for @queue;
+    $DESTROY_NEXT{$class}{$_} = '' for @queue;
 }
 
 =head2 C<status>
@@ -512,12 +512,12 @@ outstanding allocations.
 =cut
 
 sub status {
-  my $fh = $OPTIONS{stderr} ? *STDERR : *STDOUT;
-  print $fh "Tracked objects by class:\n";
-  for ( sort keys %OBJECT_COUNT ) {
-    next unless $OBJECT_COUNT{$_};    # Don't list class with count zero
-    print $fh sprintf "%-40s %d\n", $_, $OBJECT_COUNT{$_};
-  }
+    my $fh = $OPTIONS{stderr} ? *STDERR : *STDOUT;
+    print $fh "Tracked objects by class:\n";
+    for ( sort keys %OBJECT_COUNT ) {
+        next unless $OBJECT_COUNT{$_};    # Don't list class with count zero
+        print $fh sprintf "%-40s %d\n", $_, $OBJECT_COUNT{$_};
+    }
 }
 
 END { status() if $OPTIONS{at_end} }
