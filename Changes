@@ -24,3 +24,6 @@ Revision history for Perl module Devel::LeakGuard::Object
         due to an extra full stop (".").
       - Replace Module::Build with ExtUtils::MakeMaker
       - Basic code and distribution cleanup
+
+0.08  Unknown
+      - Specify minimum perl version

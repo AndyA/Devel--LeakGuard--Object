@@ -9,7 +9,7 @@ errors are mine.
 
 ## Version
 
-0.07
+0.08
 
 ## Installation
 
