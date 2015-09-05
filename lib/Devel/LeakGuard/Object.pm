@@ -540,9 +540,8 @@ None reported.
 
 =head1 BUGS AND LIMITATIONS
 
-Please report any bugs or feature requests to
-C<bug-devel-leaktrack-object@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org>.
+Please report any bugs or feature requests via
+C<https://github.com/AndyA/Devel--LeakGuard--Object/issues>.
 
 =head1 AUTHOR
 
