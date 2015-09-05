@@ -1,6 +1,9 @@
 #!/usr/bin/perl
 
-# t/003_rebless.t - check object reblessing
+use strict;
+use warnings;
+
+# t/rebless.t - check object reblessing
 
 use Test::More tests => 7;
 

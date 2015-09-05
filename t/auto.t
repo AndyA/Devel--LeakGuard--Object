@@ -1,6 +1,9 @@
 #!/usr/bin/perl
 
-# t/002_auto.t - check module loading and create testing directory
+use strict;
+use warnings;
+
+# t/auto.t - check module loading and create testing directory
 
 use Test::More tests => 6;
 
