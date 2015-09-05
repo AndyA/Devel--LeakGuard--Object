@@ -17,24 +17,24 @@ isa_ok( $foo, 'Foo::Bar', "Before the tests" );
 Devel::LeakGuard::Object::track( $foo );
 
 #03
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{Foo::Bar},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Bar'},
   1, 'One Foo::Bar object' );
 
 bless $foo, 'Foo::Baz';
 Devel::LeakGuard::Object::track( $foo );
 
 #04
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{Foo::Bar},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Bar'},
   0, 'No Foo::Bar objects' );
 
 #05
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{Foo::Baz},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Baz'},
   1, 'One Foo::Baz object' );
 
 undef $foo;
 
 #06
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{Foo::Bar},
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{'Foo::Bar'},
   0, 'no objects left' );
 
 #07
