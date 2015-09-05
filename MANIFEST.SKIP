@@ -1,8 +1,6 @@
 \.tmproj$
 \.tar\.gz$
-\B\.svn\b
 \B\.git\b
-^\.cvsignore
 ^\.gitignore
 ^\.travis.yml
 
