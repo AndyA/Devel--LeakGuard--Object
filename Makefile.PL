@@ -9,6 +9,7 @@ WriteMakefile(
     VERSION_FROM    => 'lib/Devel/LeakGuard/Object.pm',
     AUTHOR          => 'Andy Armstrong <andy@hexten.net>',
     LICENSE         => 'perl',
+    MIN_PERL_VERSION => 5.008,
     BUILD_REQUIRES  => {
             'Carp'         => 0,
             'Data::Dumper' => 0,
@@ -38,7 +39,6 @@ sub MY::postamble {
     return <<'MAKE_FRAG';
 critic:
 	perlcritic -1 -q lib/ t/*.t xt/author/*.t
-
 
 MAKE_FRAG
 }
