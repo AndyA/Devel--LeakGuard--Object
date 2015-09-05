@@ -45,22 +45,18 @@ package main;
 
 use latest;
 
-#01
 BEGIN {
   use_ok( 'Devel::LeakGuard::Object' );
 }
 
 my $foo = C->new( 'foo' );
 
-#02
 isa_ok( $foo, 'C', "Normal multi inherit" );
 
-#03
 is( $foo->{constructor}, 'A', 'Inherits new from A' );
 
 undef $foo;
 
-#04
 is( $E::msg, 'E::DESTROY called for foo', 'Inherited DESTROY method' );
 
 $foo = C->new( 'foo2' );
@@ -68,19 +64,15 @@ my $bar = D->new( 'bar' );
 
 Devel::LeakGuard::Object::track( $bar );
 
-#05
 is( $bar->{constructor}, 'E', 'Inherits new from E' );
 
-#06
 is( $Devel::LeakGuard::Object::OBJECT_COUNT{D}, 1, 'D object count' );
 
 undef $bar;
 
-#07
 is( $Devel::LeakGuard::Object::OBJECT_COUNT{D},
   0, 'D object count decremented' );
 
-#08
 is(
   $E::msg,
   'E::DESTROY called for bar',
@@ -89,7 +81,6 @@ is(
 
 undef $foo;
 
-#09
 is(
   $E::msg,
   'E::DESTROY called for foo2',
@@ -101,22 +92,18 @@ $bar = Blah->new( 'bar' );
 
 Devel::LeakGuard::Object::track( $bar );
 
-#10
 is( $bar->{constructor}, 'A', 'Inherits new from A' );
 
-#11
 is( $Devel::LeakGuard::Object::OBJECT_COUNT{Blah},
   1, 'Blah object count' );
 
 undef $bar;
 
-#12
 is( $Devel::LeakGuard::Object::OBJECT_COUNT{Blah},
   0, 'Blah object count decremented' );
 
 undef $foo;
 
-#13
 is(
   $E::msg,
   'E::DESTROY called for foo3',
@@ -128,19 +115,15 @@ $bar = C->new( 'bar' );
 
 Devel::LeakGuard::Object::track( $bar );
 
-#14
 is( $bar->{constructor}, 'A', 'Inherits new from A' );
 
-#15
 is( $Devel::LeakGuard::Object::OBJECT_COUNT{C}, 1, 'C object count' );
 
 undef $bar;
 
-#16
 is( $Devel::LeakGuard::Object::OBJECT_COUNT{C},
   0, 'C object count decremented' );
 
-#17
 is(
   $E::msg,
   'E::DESTROY called for bar',
@@ -151,7 +134,6 @@ Devel::LeakGuard::Object::track( $foo );
 
 undef $foo;
 
-#18
 is(
   $E::msg,
   'E::DESTROY called for foo4',
