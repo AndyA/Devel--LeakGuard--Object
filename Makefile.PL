@@ -10,19 +10,20 @@ WriteMakefile(
     AUTHOR          => 'Andy Armstrong <andy@hexten.net>',
     LICENSE         => 'perl',
     MIN_PERL_VERSION => 5.008,
-    BUILD_REQUIRES  => {
+    PREREQ_PM => {
             'Carp'         => 0,
             'Data::Dumper' => 0,
             'Devel::Peek'  => 0,
             'List::Util'   => '1.19',
             'Scalar::Util' => '1.19',
         },
+    BUILD_REQUIRES  => {
+            'Test::More'        => '0.42',
+            'Test::Differences' => 0,
+        },
     TEST_REQUIRES   => {
             'latest'            => 0,
             'File::Find'        => 0,
-            'Test::More'        => '0.42',
-            'Test::Differences' => 0,
-
         },
     META_MERGE      => {
         resources => {
