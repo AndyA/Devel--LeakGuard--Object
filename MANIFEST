@@ -11,6 +11,7 @@ t/guard.t
 t/inherit.t
 t/rebless.t
 t/scope.t
+xt/author/kwalitee.t
 xt/author/manifest.t
 xt/author/pod-coverage.t
 xt/author/pod.t
