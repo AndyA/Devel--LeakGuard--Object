@@ -5,8 +5,10 @@ use warnings;
 
 use Test::More;
 
-plan( skip_all => "these tests are for release candidate testing" )
+BEGIN {
+    plan skip_all => 'these tests are for release candidate testing'
     unless $ENV{RELEASE_TESTING};
+}
 
 eval { require ExtUtils::Manifest };
 plan skip_all => 'No ExtUtils::Manifest' if $@;

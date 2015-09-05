@@ -6,8 +6,10 @@ use warnings;
 use Test::More;
 use File::Find;
 
-plan( skip_all => "these tests are for release candidate testing" )
+BEGIN {
+    plan skip_all => 'these tests are for release candidate testing'
     unless $ENV{RELEASE_TESTING};
+}
 
 plan tests => 1;
 
