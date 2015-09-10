@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use ExtUtils::MakeMaker '7.0';
+use ExtUtils::MakeMaker '6.64';
 
 WriteMakefile(
     NAME            => 'Devel::LeakGuard::Object',
