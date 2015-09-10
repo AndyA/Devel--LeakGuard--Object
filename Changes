@@ -25,7 +25,7 @@ Revision history for Perl module Devel::LeakGuard::Object
       - Replace Module::Build with ExtUtils::MakeMaker
       - Basic code and distribution cleanup
 
-0.08  Unknown
+0.08  2015-09-10
       - Specify minimum perl version
       - Some perlcritic-related cleanup
       - Relax ExtUtils::MakeMaker minimum version requirement
