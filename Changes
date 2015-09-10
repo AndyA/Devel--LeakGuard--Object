@@ -31,3 +31,5 @@ Revision history for Perl module Devel::LeakGuard::Object
       - Relax ExtUtils::MakeMaker minimum version requirement
       - Add kwalitee tests
       - Fix installation instructions in README
+
+0.09  Unknown
