@@ -27,3 +27,7 @@ Revision history for Perl module Devel::LeakGuard::Object
 
 0.08  Unknown
       - Specify minimum perl version
+      - Some perlcritic-related cleanup
+      - Relax ExtUtils::MakeMaker minimum version requirement
+      - Add kwalitee tests
+      - Fix installation instructions in README
