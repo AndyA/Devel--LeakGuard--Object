@@ -1,5 +1,7 @@
 # Devel::LeakGuard::Object
 
+[![Coverage
+Status](https://coveralls.io/repos/github/AndyA/Devel--LeakGuard--Object/badge.svg)](https://coveralls.io/github/AndyA/Devel--LeakGuard--Object)
 [![Build Status](https://travis-ci.org/paultcochrane/Devel--LeakGuard--Object.svg?branch=master)](https://travis-ci.org/paultcochrane/Devel--LeakGuard--Object)
 
 This module provides tracking of objects, for the purpose of detecting memory
