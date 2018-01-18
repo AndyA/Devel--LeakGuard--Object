@@ -20,6 +20,7 @@ WriteMakefile(
     BUILD_REQUIRES  => {
             'Test::More'        => '0.42',
             'Test::Differences' => 0,
+            'Test::Trap'        => 0,
         },
     TEST_REQUIRES   => {
             'latest'            => 0,
