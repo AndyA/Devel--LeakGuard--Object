@@ -93,7 +93,7 @@ Track individual objects like this:
   use Devel::LeakGuard::Object qw( track );
 
   # Later...
-  track( my $obj = new Foo );
+  track( my $obj = Foo->new );
 
 =head2 Tracking object leaks in a block of code
 
