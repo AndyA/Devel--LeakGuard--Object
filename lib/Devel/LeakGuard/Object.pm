@@ -64,13 +64,13 @@ our $VERSION = '0.09';
 =head1 DESCRIPTION
 
 This module provides tracking of objects, for the purpose of
-detecting memory leaks due to circular references or innappropriate
+detecting memory leaks due to circular references or inappropriate
 caching schemes.
 
 It is derived from, and backwards compatible with Adam Kennedy's
 L<Devel::Leak::Object>. Any errors are mine.
 
-It works by overridding C<bless> and adding a synthetic C<DESTROY>
+It works by overriding C<bless> and adding a synthetic C<DESTROY>
 method to any tracked classes so that it can maintain a count of blessed
 objects per-class.
 
@@ -93,7 +93,7 @@ Track individual objects like this:
   use Devel::LeakGuard::Object qw( track );
 
   # Later...
-  track( my $obj = new Foo );
+  track( my $obj = Foo->new );
 
 =head2 Tracking object leaks in a block of code
 
