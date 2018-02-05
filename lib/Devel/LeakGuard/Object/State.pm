@@ -221,6 +221,8 @@ sub DESTROY { shift->done }
 
 Andy Armstrong  C<< <andy@hexten.net> >>
 
+Currently maintained by Paul Cochrane C<< <paul@liekut.de> >>
+
 =head1 LICENCE AND COPYRIGHT
 
 Copyright (c) 2009-2018, Andy Armstrong C<< <andy@hexten.net> >>.

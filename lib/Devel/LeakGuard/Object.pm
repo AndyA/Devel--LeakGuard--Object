@@ -547,6 +547,8 @@ C<https://github.com/AndyA/Devel--LeakGuard--Object/issues>.
 
 Andy Armstrong  C<< <andy@hexten.net> >>
 
+Currently maintained by Paul Cochrane C<< <paul@liekut.de> >>
+
 Based on code taken from Adam Kennedy's L<Devel::Leak::Object> which
 carries this copyright notice:
 
