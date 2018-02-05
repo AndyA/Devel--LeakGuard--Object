@@ -13,25 +13,25 @@ BEGIN {
 }
 
 my $foo = bless {}, $class;
-isa_ok( $foo, $class, "Before the tests" );
+isa_ok( $foo, $class );
 
 Devel::LeakGuard::Object::track( $foo );
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class},
-    1, '# objects ($foo)' );
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class}, 1,
+    'one object tracked ($foo)' );
 
 my $buzz = bless [], $class;
 Devel::LeakGuard::Object::track( $buzz );
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class},
-    2, '# objects ($foo,$buzz)' );
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class}, 2,
+    'two objects tracked ($foo, $buzz)' );
 
 undef $foo;
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class},
-    1, '# objects ($buzz)' );
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class}, 1,
+    'only $buzz tracked after $foo no longer in scope' );
 
 undef $buzz;
-is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class},
-    0, 'no objects left' );
-is( scalar( keys %Devel::LeakGuard::Object::TRACKED ),
-    0, 'Nothing still tracked' );
+is( $Devel::LeakGuard::Object::OBJECT_COUNT{$class}, 0,
+    'no objects remaining after $buzz no longer in scope' );
+is( scalar( keys %Devel::LeakGuard::Object::TRACKED ), 0,
+    'nothing still tracked' );
 
 # vim: expandtab shiftwidth=4
