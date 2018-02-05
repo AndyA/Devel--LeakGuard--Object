@@ -28,7 +28,7 @@ To install this module, run the following commands:
 
 ## Copyright and Licence
 
-Copyright (C) 2009-2015, Andy Armstrong
+Copyright (C) 2009-2018, Andy Armstrong
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
