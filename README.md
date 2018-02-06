@@ -3,6 +3,7 @@
 [![Coverage
 Status](https://coveralls.io/repos/github/AndyA/Devel--LeakGuard--Object/badge.svg)](https://coveralls.io/github/AndyA/Devel--LeakGuard--Object)
 [![Build Status](https://travis-ci.org/paultcochrane/Devel--LeakGuard--Object.svg?branch=master)](https://travis-ci.org/paultcochrane/Devel--LeakGuard--Object)
+[![Build status](https://ci.appveyor.com/api/projects/status/7l5bjd6yknpiij2x/branch/master?svg=true)](https://ci.appveyor.com/project/paultcochrane/devel-leakguard-object-livqc/branch/master)
 
 This module provides tracking of objects, for the purpose of detecting memory
 leaks due to circular references or innappropriate caching schemes.
