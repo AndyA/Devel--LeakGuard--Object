@@ -2,6 +2,7 @@
 \.tar\.gz$
 \B\.git\b
 ^\.gitignore
+^\.appveyor.yml
 ^\.travis.yml
 ^\.coveralls.yml
 
